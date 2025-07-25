@@ -1,0 +1,9 @@
+{
+  "project_name": "My Awesome Python Project",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '-') }}",
+  "author_name": "Your Name",
+  "author_email": "your_email@example.com",
+  "project_short_description": "A new Python project built with Hatch, pytest, Ruff, and MyPy.",
+  "python_version": ["3.10", "3.11", "3.12"],
+  "_extensions": ["jinja2_time.TimeExtension"]
+}
