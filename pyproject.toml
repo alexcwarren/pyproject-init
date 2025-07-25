@@ -65,9 +65,9 @@ dependencies = [
 ]
 
 [tool.hatch.envs.lint.scripts]
-lint = "ruff check ."
-format = "ruff format ."
-format-check = "ruff format . --check"
+lint = "ruff check src tests"
+format = "ruff format src tests"
+format-check = "ruff format src tests --check"
 
 [tool.hatch.envs.types]
 dependencies = [
