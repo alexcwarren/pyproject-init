@@ -100,11 +100,11 @@ exclude_lines = [
 line-length = 88
 target-version = "py310"
 select = [
-  "E", "W", "F", "I", "N", "D", "UP", "S", "B", "A", "C4", "T20", "PTH", "PIE", "RSE", "RET", "SIM", "ANN",
+    "E", "W", "F", "I", "N", "D", "UP", "S", "B", "A", "C4", "T20", "PTH", "PIE", "RSE", "RET", "SIM", "ANN",
 ]
 ignore = [
-  "D100", "D104", "D105", "D106", "D107", "D203", "D213", "D406", "D407", # Docstring rules
-  "ANN101", "ANN102", # missing type annotation for self, cls
+    "D100", "D104", "D105", "D106", "D107", "D203", "D213", "D406", "D407",
+    "ANN101", "ANN102",
 ]
 
 [tool.ruff.format]
