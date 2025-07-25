@@ -40,6 +40,9 @@ path = "src/pyproject_init/__about__.py"
 
 [tool.hatch.envs.default]
 dependencies = [
+  "cookiecutter>=2.1.1",
+  "jinja2-time",
+  "click>=8.1.3",
   "pytest",
   "pytest-cov",
   "pytest-randomly",
