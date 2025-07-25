@@ -51,6 +51,10 @@ dependencies = [
 ]
 
 [tool.hatch.envs.default.scripts]
+lint = "ruff check ."
+typecheck = "mypy ."
+test = "pytest {args:tests}"
+cov = "pytest --cov-pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
 all = [
   "lint",
   "typecheck",
@@ -76,7 +80,7 @@ dependencies = [
 ]
 
 [tool.hatch.envs.type.scripts]
-typecheck = "mypy src"
+typecheck = "mypy ."
 
 [tool.coverage.run]
 source_pkgs = ["pyproject_init", "tests"]
