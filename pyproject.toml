@@ -60,8 +60,6 @@ all = [
   "typecheck",
   "test"
 ]
-test = "pytest {args:tests}"
-cov = "pytest --cov=pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
 
 [tool.hatch.envs.lint]
 dependencies = [
