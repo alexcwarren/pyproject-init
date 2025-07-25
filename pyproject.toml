@@ -102,6 +102,8 @@ exclude_lines = [
 [tool.ruff]
 line-length = 88
 target-version = "py310"
+
+[tool.ruff.lint]
 select = [
     "E", "W", "F", "I", "N", "D", "UP", "S", "B", "A", "C4", "T20", "PTH", "PIE", "RSE", "RET", "SIM", "ANN",
 ]
