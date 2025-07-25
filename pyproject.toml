@@ -1,0 +1,117 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyproject-init"
+dynamic = ["version"]
+description = 'A CLI tool to automate Python project creation with modern best practices.'
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+keywords = ["cli", "project-template", "automation", "cookiecutter", "hatch"]
+authors = [
+  { name = "Alex C Warren", email = "alexcwarren.info@gmail.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = [
+  "cookiecutter>=2.1.1",
+  "click>=8.1.3"
+]
+
+[project.scripts]
+pyproject-init = "pyproject_init.cli:cli"
+
+[project.urls]
+Documentation = "https://github.com/alexcwarren/pyproject-init#readme"
+Issues = "https://github.com/alexcwarren/pyproject-init/issues"
+Source = "https://github.com/alexcwarren/pyproject-init"
+
+[tool.hatch.version]
+path = "src/pyproject_init/__about__.py"
+
+[tool.hatch.envs.default]
+dependencies = [
+  "pytest",
+  "pytest-cov",
+  "pytest-randomly",
+  "ruff",
+  "mypy"
+]
+scripts = {
+  all = [
+    "lint",
+    "typecheck",
+    "test"
+  ],
+  test = "pytest {args:tests}",
+  cov = "pytest --cov=pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
+}
+
+[tool.hatch.envs.lint]
+dependencies = [
+  "ruff"
+]
+scripts = {
+  lint = "ruff check .",
+  format = "ruff format .",
+  format-check = "ruff format . --check"
+}
+
+[tool.hatch.envs.types]
+dependencies = [
+  "mypy"
+]
+scripts = {
+  typecheck = "mypy src"
+}
+
+[tool.coverage.run]
+source_pkgs = ["pyproject_init", "tests"]
+branch = true
+parallel = true
+omit = [
+  "src/pyproject_init/__about__.py",
+]
+
+[tool.coverage.paths]
+pyproject_init = ["src/pyproject_init", "*/pyproject-init/src/pyproject_init"]
+tests = ["tests", "*/pyproject-init/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+select = [
+  "E", "W", "F", "I", "N", "D", "UP", "S", "B", "A", "C4", "T20", "PTH", "PIE", "RSE", "RET", "SIM", "ANN",
+]
+ignore = [
+  "D100", "D104", "D105", "D106", "D107", "D203", "D213", "D406", "D407", # Docstring rules
+  "ANN101", "ANN102", # missing type annotation for self, cls
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
