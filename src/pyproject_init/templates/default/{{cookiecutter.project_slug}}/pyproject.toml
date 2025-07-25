@@ -26,7 +26,7 @@ dependencies = [
 ]
 
 [project.scripts]
-{{ cookiecutter.project_slug }}/.github/workflows/ci.yml
+{{ cookiecutter.project_slug }} = "{{ cookiecutter.project_slug }}.main:main"
 
 [project.urls]
 Documentation = "https://github.com/{{ cookiecutter.author_name | slugify }}/{{ cookiecutter.project_slug }}#readme"
