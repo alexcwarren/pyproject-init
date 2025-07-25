@@ -69,12 +69,13 @@ lint = "ruff check src tests"
 format = "ruff format src tests"
 format-check = "ruff format src tests --check"
 
-[tool.hatch.envs.types]
+
+[tool.hatch.envs.type]
 dependencies = [
   "mypy"
 ]
 
-[tool.hatch.envs.types.scripts]
+[tool.hatch.envs.type.scripts]
 typecheck = "mypy src"
 
 [tool.coverage.run]
