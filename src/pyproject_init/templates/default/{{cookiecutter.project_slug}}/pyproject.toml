@@ -1,0 +1,128 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "{{ cookiecutter.project_slug }}"
+dynamic = ["version"]
+description = "{{ cookiecutter.project_short_description }}"
+readme = "README.md"
+requires-python = ">={{ cookiecutter.python_version }}"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "{{ cookiecutter.author_name }}", email = "{{ cookiecutter.author_email }}" },
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: {{ cookiecutter.python_version.split('.')[0] }}",
+  "Programming Language :: Python :: {{ cookiecutter.python_version }}",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = [
+  # Add your project-specific runtime dependencies here
+]
+
+[project.scripts]
+{{ cookiecutter.project_slug }}/.github/workflows/ci.yml
+
+[project.urls]
+Documentation = "https://github.com/{{ cookiecutter.author_name | slugify }}/{{ cookiecutter.project_slug }}#readme"
+Issues = "https://github.com/{{ cookiecutter.author_name | slugify }}/{{ cookiecutter.project_slug }}/issues"
+Source = "https://github.com/{{ cookiecutter.author_name | slugify }}/{{ cookiecutter.project_slug }}"
+
+[tool.hatch.envs.default]
+# Default environment for development of the generated project
+dependencies = [
+  "pytest",
+  "pytest-cov",
+  "ruff",
+  "mypy",
+  "pytest-randomly" # Will be added here for generated projects
+]
+
+[tool.hatch.envs.default.scripts] # CONVERTED TO NESTED SECTION to match your working pyproject-init config
+test = "pytest {args:tests}"
+cov = "pytest --cov={{ cookiecutter.project_slug }} --cov-report=term-missing --cov-report=html {args:tests}"
+lint = "ruff check src tests"
+format = "ruff format src tests"
+typecheck = "mypy src"
+all = [
+  "lint",
+  "typecheck",
+  "test"
+]
+
+[tool.hatch.envs.lint]
+dependencies = [
+  "ruff"
+]
+
+[tool.hatch.envs.lint.scripts] # CONVERTED TO NESTED SECTION
+lint = "ruff check src tests"
+format = "ruff format src tests"
+format-check = "ruff format src tests --check"
+
+[tool.hatch.envs.type]
+dependencies = [
+  "mypy"
+]
+
+[tool.hatch.envs.type.scripts] # CONVERTED TO NESTED SECTION
+typecheck = "mypy src"
+
+
+[tool.hatch.envs.test] # Dedicated test environment for the generated project
+dependencies = [
+  "pytest",
+  "pytest-cov",
+  "pytest-randomly"
+]
+[tool.hatch.envs.test.scripts] # CONVERTED TO NESTED SECTION
+test = "pytest {args:tests}"
+cov = "pytest --cov={{ cookiecutter.project_slug }} --cov-report=term-missing --cov-report=html {args:tests}"
+
+
+[tool.coverage.run]
+source_pkgs = ["{{ cookiecutter.project_slug }}", "tests"]
+branch = true
+parallel = true
+omit = [
+  "src/{{ cookiecutter.project_slug }}/__about__.py",
+]
+
+[tool.coverage.paths]
+"{{ cookiecutter.project_slug }}" = ["src/{{ cookiecutter.project_slug }}", "*/{{ cookiecutter.project_slug }}/src/{{ cookiecutter.project_slug }}"]
+tests = ["tests", "*/{{ cookiecutter.project_slug }}/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py{{ cookiecutter.python_version.replace('.', '') }}" # e.g., py310, py311
+select = [
+    "E", "W", "F", "I", "N", "D", "UP", "S", "B", "A", "C4", "T20", "PTH", "PIE", "RSE", "RET", "SIM", "ANN",
+]
+ignore = [
+    "D100", "D104", "D105", "D106", "D107", "D203", "D213", "D406", "D407", # Docstring rules
+    "ANN101", "ANN102", # missing type annotation for self, cls
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "{{ cookiecutter.python_version }}"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
