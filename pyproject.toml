@@ -46,33 +46,33 @@ dependencies = [
   "ruff",
   "mypy"
 ]
-scripts = {
-  all = [
-    "lint",
-    "typecheck",
-    "test"
-  ],
-  test = "pytest {args:tests}",
-  cov = "pytest --cov=pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
-}
+
+[tool.hatch.envs.default.scripts]
+all = [
+  "lint",
+  "typecheck",
+  "test"
+]
+test = "pytest {args:tests}"
+cov = "pytest --cov=pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
 
 [tool.hatch.envs.lint]
 dependencies = [
   "ruff"
 ]
-scripts = {
-  lint = "ruff check .",
-  format = "ruff format .",
-  format-check = "ruff format . --check"
-}
+
+[tool.hatch.envs.lint.scripts]
+lint = "ruff check ."
+format = "ruff format ."
+format-check = "ruff format . --check"
 
 [tool.hatch.envs.types]
 dependencies = [
   "mypy"
 ]
-scripts = {
-  typecheck = "mypy src"
-}
+
+[tool.hatch.envs.types.scripts]
+typecheck = "mypy src"
 
 [tool.coverage.run]
 source_pkgs = ["pyproject_init", "tests"]
