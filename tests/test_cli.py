@@ -30,7 +30,7 @@ def test_new_command_creates_project(runner: CliRunner, tmp_path: Path) -> None:
     # Create a dummy cookiecutter.json for the internal template for this test
     # In a real scenario, we'd mock cookiecutter, but for integration, this works.
     # We need to ensure the template exists for the test to run
-    template_path = Path("src/pyproject_init/templates/default")
+    # template_path = Path("src/pyproject_init/templates/default")
     # template_path.mkdir(parents=True, exist_ok=True)
     # (template_path / "cookiecutter.json").write_text("""
     # {
