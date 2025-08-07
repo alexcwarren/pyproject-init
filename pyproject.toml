@@ -47,7 +47,8 @@ dependencies = [
   "pytest-cov",
   "pytest-randomly",
   "ruff",
-  "mypy"
+  "mypy",
+  "pyclean"
 ]
 
 [tool.hatch.envs.default.scripts]
@@ -55,6 +56,7 @@ lint = "ruff check src/pyproject_init tests"
 typecheck = "mypy src/pyproject_init tests"
 test = "pytest {args:tests}"
 cov = "pytest --cov-pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
+clean = "pyclean ."
 all = [
   "lint",
   "typecheck",
