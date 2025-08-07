@@ -31,25 +31,26 @@ def test_new_command_creates_project(runner: CliRunner, tmp_path: Path) -> None:
     # In a real scenario, we'd mock cookiecutter, but for integration, this works.
     # We need to ensure the template exists for the test to run
     template_path = Path("src/pyproject_init/templates/default")
-    template_path.mkdir(parents=True, exist_ok=True)
-    (template_path / "cookiecutter.json").write_text("""
-    {
-        "project_name": "test-project",
-        "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '-') }}",
-        "author_name": "Test Author",
-        "author_email": "test@example.com"
-    }
-    """)
+    # template_path.mkdir(parents=True, exist_ok=True)
+    # (template_path / "cookiecutter.json").write_text("""
+    # {
+    #     "project_name": "test-project",
+    #     "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '-') }}",
+    #     "author_name": "Test Author",
+    #     "author_email": "test@example.com"
+    # }
+    # """)
     # Also create the {{cookiecutter.project_slug}} directory inside the dummy template
-    (template_path / "{{cookiecutter.project_slug}}").mkdir(exist_ok=True)
-    (template_path / "{{cookiecutter.project_slug}}" / "dummy.txt").write_text(
-        "This is a dummy file."
-    )
+    # (template_path / "{{cookiecutter.project_slug}}").mkdir(exist_ok=True)
+    # (template_path / "{{cookiecutter.project_slug}}" / "dummy.txt").write_text(
+    #     "This is a dummy file."
+    # )
 
     # Run the CLI command
     result = runner.invoke(
         cli, ["new", project_name, "--output-dir", str(output_dir), "--no-input"]
     )
+    # import pdb; pdb.set_trace()
 
     # Assertions
     assert result.exit_code == 0
@@ -62,7 +63,7 @@ def test_new_command_creates_project(runner: CliRunner, tmp_path: Path) -> None:
     assert generated_project_path.is_dir()
 
     # Verify a file from the template exists within the generated project
-    assert (generated_project_path / "dummy.txt").is_file()
+    assert (generated_project_path / "README.md").is_file()
 
     # Clean up the dummy template files created for the test
     # shutil.rmtree(template_path)
