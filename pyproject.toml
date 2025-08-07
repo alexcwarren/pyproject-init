@@ -51,8 +51,8 @@ dependencies = [
 ]
 
 [tool.hatch.envs.default.scripts]
-lint = "ruff check ."
-typecheck = "mypy ."
+lint = "ruff check src/pyproject_init tests"
+typecheck = "mypy src/pyproject_init tests"
 test = "pytest {args:tests}"
 cov = "pytest --cov-pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
 all = [
@@ -78,7 +78,7 @@ dependencies = [
 ]
 
 [tool.hatch.envs.type.scripts]
-typecheck = "mypy ."
+typecheck = "mypy src/pyproject_init tests"
 
 [tool.coverage.run]
 source_pkgs = ["pyproject_init", "tests"]
@@ -102,10 +102,14 @@ exclude_lines = [
 [tool.ruff]
 line-length = 88
 target-version = "py310"
+exclude = [
+  "src/pyproject_init/templates/**"
+]
 
 [tool.ruff.lint]
 select = [
-    "E", "W", "F", "I", "N", "D", "UP", "S", "B", "A", "C4", "T20", "PTH", "PIE", "RSE", "RET", "SIM", "ANN",
+    "E", "W", "F", "I", "N", "D", "UP", "S", "B", "A", "C4", "T20", "PTH",
+    "PIE", "RSE", "RET", "SIM", "ANN",
 ]
 ignore = [
     "D100", "D104", "D105", "D106", "D107", "D203", "D213", "D406", "D407",
@@ -123,3 +127,7 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 ignore_missing_imports = true
+exclude = "src/pyproject_init_templates"
+
+[tool.pytest.ini_options]
+norecursedirs = ["src/pyproject_init/templates"]
