@@ -1,22 +1,31 @@
+from pathlib import Path
+
 import pytest
 from click.testing import CliRunner
-from pyproject_init.cli import cli
-from pathlib import Path
-import shutil
 
-# Fixture to provide a CliRunner instance
+from pyproject_init.cli import cli
+
+
 @pytest.fixture
-def runner():
+def runner() -> CliRunner:
+    """Fixture to provide a CliRunner instance.
+
+    Returns:
+        CliRunner: instance of CliRunner class.
+
+    """
     return CliRunner()
 
+
 # Test the 'new' command
-def test_new_command_creates_project(runner, tmp_path: Path):
-    """
+def test_new_command_creates_project(runner: CliRunner, tmp_path: Path) -> None:
+    """Test 'pyproject-init new'.
+
     Tests that the 'pyproject-init new' command successfully creates a project
     in a temporary directory.
     """
     project_name = "test-new-project"
-    output_dir = tmp_path # Use pytest's tmp_path fixture for a temporary directory
+    output_dir = tmp_path  # Use pytest's tmp_path fixture for a temporary directory
 
     # Create a dummy cookiecutter.json for the internal template for this test
     # In a real scenario, we'd mock cookiecutter, but for integration, this works.
@@ -33,18 +42,20 @@ def test_new_command_creates_project(runner, tmp_path: Path):
     """)
     # Also create the {{cookiecutter.project_slug}} directory inside the dummy template
     (template_path / "{{cookiecutter.project_slug}}").mkdir(exist_ok=True)
-    (template_path / "{{cookiecutter.project_slug}}" / "dummy.txt").write_text("This is a dummy file.")
-
+    (template_path / "{{cookiecutter.project_slug}}" / "dummy.txt").write_text(
+        "This is a dummy file."
+    )
 
     # Run the CLI command
     result = runner.invoke(
-        cli,
-        ["new", project_name, "--output-dir", str(output_dir), "--no-input"]
+        cli, ["new", project_name, "--output-dir", str(output_dir), "--no-input"]
     )
 
     # Assertions
     assert result.exit_code == 0
-    assert f"Project created successfully at: {output_dir / project_name}" in result.output
+    assert (
+        f"Project created successfully at: {output_dir / project_name}" in result.output
+    )
 
     # Verify the project directory exists
     generated_project_path = output_dir / project_name
