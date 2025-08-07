@@ -70,6 +70,7 @@ dependencies = [
 lint = "ruff check src tests"
 format = "ruff format src tests"
 format-check = "ruff format src tests --check"
+fix = "ruff check src tests --fix"
 
 
 [tool.hatch.envs.type]
