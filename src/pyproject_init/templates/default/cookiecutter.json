@@ -1,6 +1,6 @@
 {
   "project_name": "My Awesome Python Project",
-  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '-') }}",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_') }}",
   "author_name": "Your Name",
   "author_email": "your_email@example.com",
   "project_short_description": "A new Python project built with Hatch, pytest, Ruff, and MyPy.",
