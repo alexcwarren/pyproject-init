@@ -41,6 +41,17 @@ def new(
 
     If PROJECT_NAME is not provided, you will be prompted.
     """
+    # TODO
+    # We need to check if template:
+    # (1) is the name of one of the directories in the "templates" directory
+    # OR
+    # (2) is a valid path to a cookiecutter.json template file
+    #
+    # (1) is straightforward: , get list of TEMPLATE_DIR sub-directories, and confirm
+    #     template is one of them.
+    # (2) What makes a template file "valid"? Must be JSON? Must be named
+    #     "cookiecutter.json"? Must be formatted a certain way? Must include certain
+    #     fields?
     template_path = TEMPLATES_DIR / template
 
     if not template_path.is_dir():
