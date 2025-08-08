@@ -19,7 +19,7 @@ def runner() -> CliRunner:
 # TODO
 # test incorrect/missing command arguments
 # test that incorrect execution of command doesn't create new directory
-# 
+#
 
 # Test the 'new' command
 def test_new_command_creates_project(runner: CliRunner, tmp_path: Path) -> None:
