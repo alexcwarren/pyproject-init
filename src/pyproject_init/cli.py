@@ -23,8 +23,11 @@ def cli() -> None:
 )
 @click.option(
     "--template",
-    default="default",  # We'll start with a 'default' template
-    help="The name of the internal template to use (e.g., 'default').",
+    default="default",
+    help=(
+        "The name of the internal template to use (e.g., 'default'), or the path to "
+        "a specific template file."
+    ),
 )
 @click.option(
     "--no-input",
