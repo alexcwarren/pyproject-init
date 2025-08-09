@@ -18,7 +18,7 @@
 1. **Clone the repository:**
 
     ```shell
-    git clone [https://github.com/](https://github.com/){{ cookiecutter.author_name | slugify }}/{{ cookiecutter.project_slug }}.git
+    git clone [https://github.com/](https://github.com/){{ cookiecutter.user_name }}/{{ cookiecutter.project_slug }}.git
     cd {{ cookiecutter.project_slug }}
     ```
 

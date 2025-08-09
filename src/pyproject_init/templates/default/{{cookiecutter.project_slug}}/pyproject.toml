@@ -29,9 +29,9 @@ dependencies = [
 {{ cookiecutter.project_slug }} = "{{ cookiecutter.project_slug }}.main:main"
 
 [project.urls]
-Documentation = "https://github.com/{{ cookiecutter.author_name | slugify }}/{{ cookiecutter.project_slug }}#readme"
-Issues = "https://github.com/{{ cookiecutter.author_name | slugify }}/{{ cookiecutter.project_slug }}/issues"
-Source = "https://github.com/{{ cookiecutter.author_name | slugify }}/{{ cookiecutter.project_slug }}"
+Documentation = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_slug }}#readme"
+Issues = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_slug }}/issues"
+Source = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_slug }}"
 
 [tool.hatch.envs.default]
 # Default environment for development of the generated project
