@@ -38,9 +38,10 @@ Source = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.projec
 dependencies = [
   "pytest",
   "pytest-cov",
+  "pytest-randomly",
   "ruff",
   "mypy",
-  "pytest-randomly" # Will be added here for generated projects
+  "pyclean"
 ]
 
 [tool.hatch.envs.default.scripts]
@@ -49,6 +50,7 @@ cov = "pytest --cov={{ cookiecutter.project_slug }} --cov-report=term-missing --
 lint = "ruff check src tests"
 format = "ruff format src tests"
 typecheck = "mypy src"
+clean = "pyclean ."
 all = [
   "lint",
   "typecheck",
