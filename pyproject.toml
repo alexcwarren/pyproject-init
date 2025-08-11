@@ -46,30 +46,43 @@ dependencies = [
 ]
 
 [tool.hatch.envs.default.scripts]
-lint = "ruff check src/pyproject_init tests"
-typecheck = "mypy src/pyproject_init tests"
+check-fix = "ruff check src tests scripts --fix"
+format = "ruff format src tests scripts"
+lint-all = ["format", "check-fix"]
+typecheck = "mypy src tests scripts"
 test = "pytest {args:tests}"
+all = ["lint-all", "typecheck", "test"]
 cov = "pytest --cov-pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
 clean = "python scripts/clean.py {args}"
-all = ["lint", "typecheck", "test"]
 
 [tool.hatch.envs.lint]
 dependencies = ["ruff"]
 
 [tool.hatch.envs.lint.scripts]
-lint = "ruff check src tests"
-format = "ruff format src tests"
-format-check = "ruff format src tests --check"
-fix = "ruff check src tests --fix"
+lint = "ruff check src tests scripts"
+format-check = "ruff format src tests scripts --check"
+all = ["lint", "format-check"]
 
 [tool.hatch.envs.type]
 dependencies = ["mypy"]
 
 [tool.hatch.envs.type.scripts]
-typecheck = "mypy src/pyproject_init tests"
+typecheck = "mypy src tests scripts"
+
+[tool.hatch.envs.test]
+dependencies = ["pytest"]
+
+[tool.hatch.envs.test.scripts]
+test = "pytest {arg:tests}"
+
+[tool.hatch.envs.coverage]
+dependencies = ["pytest"]
+
+[tool.hatch.envs.coverage.scripts]
+cov = "pytest --cov-pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
 
 [tool.coverage.run]
-source_pkgs = ["pyproject_init", "tests"]
+source_pkgs = ["pyproject_init", "tests", "scripts"]
 branch = true
 parallel = true
 omit = ["src/pyproject_init/__about__.py"]
