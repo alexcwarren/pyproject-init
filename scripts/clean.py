@@ -115,9 +115,6 @@ def main(log_level: LogLevel) -> None:
 
     """
     root_path: Path = PROJECT_DIR
-    # if root_dir is not None:
-    #     root_path = Path(root_dir)
-
     level: int = LOG_LEVELS[log_level]
     logger.setLevel(level)
 
