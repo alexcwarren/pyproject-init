@@ -17,12 +17,14 @@ def cli() -> None:
 @click.argument("project_name", required=False)
 @click.option(
     "--output-dir",
+    "-o",
     type=click.Path(file_okay=False, dir_okay=True, writable=True, path_type=Path),
     default=Path.cwd(),
     help="Directory where the new project will be created.",
 )
 @click.option(
     "--template",
+    "-t",
     default="default",
     help=(
         "The name of the internal template to use (e.g., 'default'), or the path to "

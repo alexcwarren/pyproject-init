@@ -10,9 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 keywords = ["cli", "project-template", "automation", "cookiecutter", "hatch"]
-authors = [
-  { name = "Alex C Warren", email = "alexcwarren.info@gmail.com" },
-]
+authors = [{ name = "Alex C Warren", email = "alexcwarren.info@gmail.com" }]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
@@ -22,13 +20,10 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = [
-  "cookiecutter>=2.1.1",
-  "click>=8.1.3"
-]
+dependencies = ["cookiecutter>=2.1.1", "click>=8.1.3"]
 
 [project.scripts]
-pyproject-init = "pyproject_init.cli:cli"
+pyproject-init = "pyproject_init.pyproject_init:cli"
 
 [project.urls]
 Documentation = "https://github.com/alexcwarren/pyproject-init#readme"
@@ -48,79 +43,99 @@ dependencies = [
   "pytest-randomly",
   "ruff",
   "mypy",
-  "pyclean"
 ]
 
 [tool.hatch.envs.default.scripts]
-lint = "ruff check src/pyproject_init tests"
-typecheck = "mypy src/pyproject_init tests"
+check-fix = "ruff check src tests scripts --fix"
+format = "ruff format src tests scripts"
+lint-all = ["format", "check-fix"]
+typecheck = "mypy src tests scripts"
 test = "pytest {args:tests}"
+all = ["lint-all", "typecheck", "test"]
 cov = "pytest --cov-pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
-clean = "pyclean ."
-all = [
-  "lint",
-  "typecheck",
-  "test"
-]
+clean = "python scripts/clean.py {args}"
 
 [tool.hatch.envs.lint]
-dependencies = [
-  "ruff"
-]
+dependencies = ["ruff"]
 
 [tool.hatch.envs.lint.scripts]
-lint = "ruff check src tests"
-format = "ruff format src tests"
-format-check = "ruff format src tests --check"
-fix = "ruff check src tests --fix"
-
+lint = "ruff check src tests scripts"
+format-check = "ruff format src tests scripts --check"
+all = ["lint", "format-check"]
 
 [tool.hatch.envs.type]
-dependencies = [
-  "mypy"
-]
+dependencies = ["mypy"]
 
 [tool.hatch.envs.type.scripts]
-typecheck = "mypy src/pyproject_init tests"
+typecheck = "mypy src tests scripts"
+
+[tool.hatch.envs.test]
+dependencies = [
+  "pytest",
+  "jinja2_time"
+]
+
+[tool.hatch.envs.test.scripts]
+test = "pytest {args:tests}"
+
+[tool.hatch.envs.coverage]
+dependencies = [
+  "pytest",
+  "pytest-cov",
+  "jinja2_time"
+]
+
+[tool.hatch.envs.coverage.scripts]
+cov = "pytest --cov=pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
 
 [tool.coverage.run]
-source_pkgs = ["pyproject_init", "tests"]
+source_pkgs = ["pyproject_init", "tests", "scripts"]
 branch = true
 parallel = true
-omit = [
-  "src/pyproject_init/__about__.py",
-]
+omit = ["src/pyproject_init/__about__.py"]
 
 [tool.coverage.paths]
 pyproject_init = ["src/pyproject_init", "*/pyproject-init/src/pyproject_init"]
 tests = ["tests", "*/pyproject-init/tests"]
 
 [tool.coverage.report]
-exclude_lines = [
-  "no cov",
-  "if __name__ == .__main__.:",
-  "if TYPE_CHECKING:",
-]
+exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
 
 [tool.ruff]
 line-length = 89
 target-version = "py310"
-exclude = [
-  "src/pyproject_init/templates/**"
-]
+exclude = ["src/pyproject_init/templates/**"]
 
 [tool.ruff.lint]
 select = [
-    "E", "W", "F", "I", "N", "D", "UP", "S", "B", "A", "C4", "T20", "PTH",
-    "PIE", "RSE", "RET", "SIM", "ANN",
+  "E",   # pycodestyle error
+  "W",   # pycodestyle warning
+  "F",   # Pyflakes
+  "I",   # isort
+  "N",   # pep8-naming
+  "D",   # pydocstyle
+  "UP",  # pyupgrade
+  "S",   # flake8-bandit
+  "B",   # flake8-bugbear
+  "A",   # flake8-builtins
+  "C4",  # flake8-comprehensions
+  "T20", # flake8-print
+  "PTH", # flake8-pathlib
+  "PIE", # flake8-pie
+  "RSE", # flake8-raise
+  "RET", # flake8-return
+  "SIM", # flake8-simplify
+  "ANN", # flake8-annotations
 ]
 ignore = [
-    "D100", "D104", "D105", "D106", "D107", "D203", "D213", "D406", "D407",
-    "ANN101", "ANN102",
+  "D100", "D104", "D105", "D106", "D107", "D203", "D213", "D406", "D407", # Docstring rules
+  "ANN101", "ANN102", # missing type annotation for self, cls
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101"]
+"tests/*" = [
+  "S101", # flake8-bandit: use of assert
+]
 
 [tool.ruff.format]
 quote-style = "double"
