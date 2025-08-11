@@ -28,7 +28,7 @@ LOG_LEVELS: dict[LogLevel, int] = {
     LogLevel.INFO: logging.INFO,
     LogLevel.WARNING: logging.WARNING,
     LogLevel.WARN: logging.WARNING,
-    LogLevel.ERROR: logging.ERROR
+    LogLevel.ERROR: logging.ERROR,
 }
 
 # Define common directories and files to clean up
