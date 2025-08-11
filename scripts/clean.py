@@ -6,6 +6,8 @@ from pathlib import Path
 
 import click
 
+PROJECT_DIR = Path(__file__).parent.parent
+
 logger = logging.getLogger("clean_script")
 console_handler = logging.StreamHandler()
 formatter = logging.Formatter("%(message)s")
@@ -34,12 +36,14 @@ LOG_LEVELS: dict[LogLevel, int] = {
 # Define common directories and files to clean up
 DIRS_TO_CLEAN = [
     "__pycache__",
+    r"src/pyproject_init/__pycache__",
+    r"tests/__pycache__",
     ".pytest_cache",
     ".mypy_cache",
     ".ruff_cache",
     "build",
     "dist",
-    ".hatch",  # Hatch's own environment cache, if you want to clean it
+    ".hatch",
 ]
 
 FILES_TO_CLEAN = [
@@ -97,29 +101,31 @@ def remove_file_safe(path: Path | str) -> int:
 
 
 @click.command()
-@click.option("--root-dir", default=None)
 @click.option(
     "--log-level",
     default=LogLevel.INFO,
     type=click.Choice(LogLevel, case_sensitive=False),
     help="Logging level.",
 )
-def main(root_dir: str, log_level: LogLevel) -> None:
+def main(log_level: LogLevel) -> None:
     """Run main function for clean.py.
 
     Args:
-        root_dir (str): Path to root directory.
         log_level (LogLevel): Logging level.
 
     """
-    root_path: Path = Path.cwd()
-    if root_dir is not None:
-        root_path = Path(root_dir)
+    root_path: Path = PROJECT_DIR
+    # if root_dir is not None:
+    #     root_path = Path(root_dir)
 
     level: int = LOG_LEVELS[log_level]
     logger.setLevel(level)
 
     logger.info(f"Cleaning directory: {root_path}")
+
+    do_proceed: bool = input("Proceed? (y/N): ").lower().startswith("y")
+    if not do_proceed:
+        return
 
     num_files: int = 0
     num_dirs: int = 0
@@ -144,4 +150,6 @@ def main(root_dir: str, log_level: LogLevel) -> None:
 
 
 if __name__ == "__main__":
+    if not PROJECT_DIR.is_dir():
+        raise NotADirectoryError(f'"{PROJECT_DIR.absolute()}" is not a valid directory')
     main()
