@@ -28,9 +28,9 @@ jobs:
         run: pip install hatch
 
       - name: Install dependencies
-        run: hatch env create default && hatch run pip install -e .
+        run: hatch env create lint && hatch run pip install -e .
 
-      - name: Run lint, typecheck, and tests
+      - name: Run lint
         run: hatch run lint:all
 
   typecheck:
@@ -52,9 +52,9 @@ jobs:
         run: pip install hatch
 
       - name: Install dependencies
-        run: hatch env create default && hatch run pip install -e .
+        run: hatch env create type && hatch run pip install -e .
 
-      - name: Run lint, typecheck, and tests
+      - name: Run typecheck
         run: hatch run type:typecheck
 
   test:
@@ -76,9 +76,9 @@ jobs:
         run: pip install hatch
 
       - name: Install dependencies
-        run: hatch env create default && hatch run pip install -e .
+        run: hatch env create test && hatch run pip install -e .
 
-      - name: Run lint, typecheck, and tests
+      - name: Run tests
         run: hatch run test:test
 
   coverage:
@@ -102,5 +102,5 @@ jobs:
       - name: Install dependencies
         run: hatch env create default && hatch run pip install -e .
 
-      - name: Run lint, typecheck, and tests
+      - name: Run coverage
         run: hatch run coverage:cov
