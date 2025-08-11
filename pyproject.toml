@@ -23,7 +23,7 @@ classifiers = [
 dependencies = ["cookiecutter>=2.1.1", "click>=8.1.3"]
 
 [project.scripts]
-pyproject-init = "pyproject_init.cli:cli"
+pyproject-init = "pyproject_init.pyproject_init:cli"
 
 [project.urls]
 Documentation = "https://github.com/alexcwarren/pyproject-init#readme"

@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from pyproject_init.cli import cli
+from pyproject_init.pyproject_init import cli
 
 
 @pytest.fixture
