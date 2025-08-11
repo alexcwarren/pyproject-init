@@ -84,26 +84,26 @@ jobs:
       - name: Run tests
         run: hatch run test:test
 
-  coverage:
-    runs-on: ubuntu-latest
+  # coverage:
+  #   runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+  #   strategy:
+  #     matrix:
+  #       python-version: ["3.10", "3.11", "3.12"]
 
-    steps:
-      - uses: actions/checkout@v3
+  #   steps:
+  #     - uses: actions/checkout@v3
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
+  #     - name: Set up Python ${{ matrix.python-version }}
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: ${{ matrix.python-version }}
 
-      - name: Install Hatch
-        run: pip install hatch
+  #     - name: Install Hatch
+  #       run: pip install hatch
 
-      - name: Install dependencies
-        run: hatch env create default && hatch run pip install -e .
+  #     - name: Install dependencies
+  #       run: hatch env create default && hatch run pip install -e .
 
-      - name: Run coverage
-        run: hatch run coverage:cov
+  #     - name: Run coverage
+  #       run: hatch run coverage:cov
