@@ -73,7 +73,7 @@ typecheck = "mypy src tests scripts"
 dependencies = ["pytest"]
 
 [tool.hatch.envs.test.scripts]
-test = "pytest {arg:tests}"
+test = "pytest {args:tests}"
 
 [tool.hatch.envs.coverage]
 dependencies = ["pytest"]
