@@ -1,9 +1,10 @@
 import enum
 import logging
-import click
 import shutil
 import sys
 from pathlib import Path
+
+import click
 
 logger = logging.getLogger("clean_script")
 console_handler = logging.StreamHandler()
@@ -11,12 +12,16 @@ formatter = logging.Formatter("%(message)s")
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
+
 class LogLevel(enum.Enum):
+    """Class to define logging levels."""
+
     DEBUG = enum.auto()
     INFO = enum.auto()
     WARNING = enum.auto()
     WARN = enum.auto()
     ERROR = enum.auto()
+
 
 LOG_LEVELS: dict[LogLevel, int] = {
     LogLevel.DEBUG: logging.DEBUG,
@@ -43,61 +48,68 @@ FILES_TO_CLEAN = [
 ]
 
 
-def rmtree_safe(path: str) -> int:
+def rmtree_safe(path: Path | str) -> int:
     """Safely remove a directory.
 
     Args:
-        path (str): Path to directory.
+        path (Path | str): Path to directory.
 
     Returns:
         int: Number of directories removed.
+
     """
-    path: Path = Path(path)
-    if path.exists() and path.is_dir():
-        logger.debug(f"Removing directory: {path}")
+    dir_path: Path = path if isinstance(path, Path) else Path(path)
+    dir_removed: int = 0
+    if dir_path.exists() and dir_path.is_dir():
+        logger.debug(f"Removing directory: {dir_path}")
         try:
-            shutil.rmtree(path)
+            shutil.rmtree(dir_path)
         except OSError as e:
-            logger.error(f"Error removing directory {path}: {e}", file=sys.stderr)
-    elif path.exists():
-        logger.warning(f"`{path}` exists but is not a directory. Skipping rmtree.")
-    return 1
+            logger.error(f"Error removing directory {dir_path}: {e}", sys.stderr)
+        dir_removed += 1
+    elif dir_path.exists():
+        logger.warning(f"`{dir_path}` exists but is not a directory. Skipping rmtree.")
+    return dir_removed
 
 
-def remove_file_safe(path: str) -> int:
+def remove_file_safe(path: Path | str) -> int:
     """Safely remove file.
 
     Args:
-        path (str): Path to file.
+        path (Path | str): Path to file.
 
     Returns:
         int: Number of directories removed.
 
     """
-    path: Path = Path(path)
-    if path.exists() and path.is_file():
-        logger.debug(f"Removing file: {path}")
+    dir_path: Path = path if isinstance(path, Path) else Path(path)
+    file_removed: int = 0
+    if dir_path.exists() and dir_path.is_file():
+        logger.debug(f"Removing file: {dir_path}")
         try:
-            path.unlink()
+            dir_path.unlink()
         except OSError as e:
-            logger.error(f"Error removing file {path}: {e}", file=sys.stderr)
-    elif path.exists():
-        logger.warning(f"`{path}` exists but is not a file. Skipping file removal.")
-    return 1
+            logger.error(f"Error removing file {dir_path}: {e}", sys.stderr)
+        file_removed += 1
+    elif dir_path.exists():
+        logger.warning(f"`{dir_path}` exists but is not a file. Skipping file removal.")
+    return file_removed
+
 
 @click.command()
-@click.option('--root-dir', default=None)
+@click.option("--root-dir", default=None)
 @click.option(
-    '--log-level',
+    "--log-level",
     default=LogLevel.INFO,
     type=click.Choice(LogLevel, case_sensitive=False),
-    help="Logging level."
+    help="Logging level.",
 )
 def main(root_dir: str, log_level: LogLevel) -> None:
     """Run main function for clean.py.
 
     Args:
         root_dir (str): Path to root directory.
+        log_level (LogLevel): Logging level.
 
     """
     root_path: Path = Path.cwd()
@@ -107,18 +119,18 @@ def main(root_dir: str, log_level: LogLevel) -> None:
     level: int = LOG_LEVELS[log_level]
     logger.setLevel(level)
 
-    logger.info("Starting clean process...")
+    logger.info(f"Cleaning directory: {root_path}")
 
     num_files: int = 0
     num_dirs: int = 0
 
     # Remove specific directories
     for d in DIRS_TO_CLEAN:
-        num_dirs += rmtree_safe(f"{root_dir}/{d}")
+        num_dirs += rmtree_safe(root_path.joinpath(d))
 
     # Remove specific files
     for f in FILES_TO_CLEAN:
-        num_files += remove_file_safe(f"{root_dir}/{f}")
+        num_files += remove_file_safe(root_path.joinpath(f))
 
     # Clean up *.egg-info directories (often created by build processes)
     for egg_info_dir in root_path.rglob("*.egg-info"):
