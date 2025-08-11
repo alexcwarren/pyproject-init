@@ -102,7 +102,7 @@ def remove_file_safe(path: Path | str) -> int:
 
 @click.command()
 @click.option(
-    "--log-level",
+    "--log-level", "-l",
     default=LogLevel.INFO,
     type=click.Choice(LogLevel, case_sensitive=False),
     help="Logging level.",
