@@ -79,10 +79,14 @@ dependencies = [
 test = "pytest {args:tests}"
 
 [tool.hatch.envs.coverage]
-dependencies = ["pytest"]
+dependencies = [
+  "pytest",
+  "pytest-cov",
+  "jinja2_time"
+]
 
 [tool.hatch.envs.coverage.scripts]
-cov = "pytest --cov-pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
+cov = "pytest --cov=pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
 
 [tool.coverage.run]
 source_pkgs = ["pyproject_init", "tests", "scripts"]
