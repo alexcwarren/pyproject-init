@@ -70,7 +70,10 @@ dependencies = ["mypy"]
 typecheck = "mypy src tests scripts"
 
 [tool.hatch.envs.test]
-dependencies = ["pytest"]
+dependencies = [
+  "pytest",
+  "jinja2_time"
+]
 
 [tool.hatch.envs.test.scripts]
 test = "pytest {args:tests}"
