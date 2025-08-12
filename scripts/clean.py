@@ -44,6 +44,7 @@ DIRS_TO_CLEAN = [
     "build",
     "dist",
     ".hatch",
+    "htmlcov",
 ]
 
 FILES_TO_CLEAN = [
