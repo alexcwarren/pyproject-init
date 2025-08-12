@@ -60,7 +60,7 @@ jobs:
       - name: Run typecheck
         run: hatch run type:typecheck
 
-  test:
+  test-pyproject-init:
     runs-on: ubuntu-latest
 
     strategy:
@@ -82,7 +82,31 @@ jobs:
         run: hatch env create test && hatch run pip install -e .
 
       - name: Run tests
-        run: hatch run test:test
+        run: hatch run test:pyproject-init
+
+  test-clean:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Hatch
+        run: pip install hatch
+
+      - name: Install dependencies
+        run: hatch env create test && hatch run pip install -e .
+
+      - name: Run tests
+        run: hatch run test:clean
 
   coverage:
     runs-on: ubuntu-latest
