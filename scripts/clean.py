@@ -54,6 +54,58 @@ FILES_TO_CLEAN = [
 ]
 
 
+class Output:
+    """Class for outputting click.echo and console logging messages."""
+
+    def __init__(self, logging_level: int | None = None) -> None:
+        self.__logging_level: int | None = logging_level
+
+    def debug(self, msg: str) -> None:
+        """Output msg at severity DEBUG."""
+        if self.__logging_level is not None and self.__logging_level <= logging.DEBUG:
+            click.echo(msg)
+        logging.debug(msg)
+
+    def info(self, msg: str) -> None:
+        """Output msg at severity INFO."""
+        if self.__logging_level is not None and self.__logging_level <= logging.INFO:
+            click.echo(msg)
+        logging.debug(msg)
+
+    def warning(self, msg: str) -> None:
+        """Output msg at severity WARNING."""
+        if self.__logging_level is not None and self.__logging_level <= logging.WARNING:
+            click.echo(msg)
+        logging.debug(msg)
+
+    def error(self, msg: str) -> None:
+        """Output msg at severity ERROR."""
+        if self.__logging_level is not None and self.__logging_level <= logging.ERROR:
+            click.echo(msg)
+        logging.debug(msg)
+
+    def set_logging_level(self, logging_level: int) -> None:
+        """Set logging severity level for Output.
+
+        Args:
+            logging_level (int): logging severity level.
+
+        Raises:
+            ValueError:
+                logging_level must be one of logging module's included severities.
+
+        """
+        if logging_level not in LOG_LEVELS.values():
+            raise ValueError(f"Invalid logging_level: {logging_level}")
+        self.__logging_level = logging_level
+
+    def __repr__(self) -> str:
+        return f"Output({self.__logging_level = })"
+
+
+output: Output = Output()
+
+
 def rmtree_safe(path: Path | str) -> int:
     """Safely remove a directory.
 
@@ -66,15 +118,17 @@ def rmtree_safe(path: Path | str) -> int:
     """
     dir_path: Path = path if isinstance(path, Path) else Path(path)
     dir_removed: int = 0
-    if dir_path.exists() and dir_path.is_dir():
-        logger.debug(f"Removing directory: {dir_path}")
+    if dir_path.is_dir():
+        output.debug(f"Removing directory: {dir_path}")
         try:
             shutil.rmtree(dir_path)
         except OSError as e:
-            logger.error(f"Error removing directory {dir_path}: {e}", sys.stderr)
+            output.error(f"Error removing directory {dir_path}: {e}")
         dir_removed += 1
     elif dir_path.exists():
-        logger.warning(f"`{dir_path}` exists but is not a directory. Skipping rmtree.")
+        output.warning(f'"{dir_path}" exists but is not a directory. Skipping rmtree.')
+    else:
+        output.debug(f'"{dir_path}" does not exist.')
     return dir_removed
 
 
@@ -90,15 +144,17 @@ def remove_file_safe(path: Path | str) -> int:
     """
     dir_path: Path = path if isinstance(path, Path) else Path(path)
     file_removed: int = 0
-    if dir_path.exists() and dir_path.is_file():
-        logger.debug(f"Removing file: {dir_path}")
+    if dir_path.is_file():
+        output.debug(f"Removing file: {dir_path}")
         try:
             dir_path.unlink()
         except OSError as e:
-            logger.error(f"Error removing file {dir_path}: {e}", sys.stderr)
+            output.error(f"Error removing file {dir_path}: {e}")
         file_removed += 1
     elif dir_path.exists():
-        logger.warning(f"`{dir_path}` exists but is not a file. Skipping file removal.")
+        output.warning(f'"{dir_path}" exists but is not a file. Skipping file removal.')
+    else:
+        output.debug(f'"{dir_path}" does not exist.')
     return file_removed
 
 
@@ -120,8 +176,9 @@ def main(log_level: LogLevel) -> None:
     root_path: Path = PROJECT_DIR
     level: int = LOG_LEVELS[log_level]
     logger.setLevel(level)
+    output.set_logging_level(level)
 
-    logger.info(f"Cleaning directory: {root_path}")
+    output.info(f"Cleaning directory: {root_path}")
 
     pytest_is_invoking: bool = any(
         "pytest" in frame.function for frame in inspect.stack()
@@ -150,7 +207,7 @@ def main(log_level: LogLevel) -> None:
     for pyc_file in root_path.rglob("*.pyc"):
         num_files += remove_file_safe(str(pyc_file))
 
-    logger.info(f"Cleaning complete: {num_files} files, {num_dirs} directories removed.")
+    output.info(f"Cleaning complete: {num_files} files, {num_dirs} directories removed.")
 
 
 if __name__ == "__main__":
