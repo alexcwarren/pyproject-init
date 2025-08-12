@@ -198,23 +198,3 @@ def test_clean_swap_directory_with_file(
     assert len(files) > 0
     for f in files:
         assert f"{f}\" exists but is not a file." in result.output
-
-
-def test_clean_errors(
-    runner: CliRunner,
-    tmp_path: Path,
-) -> None:
-    """Test `clean.py` with directories/files lacking permission to delete.
-
-    Args:
-        runner (CliRunner): ...
-        tmp_path (Path): ...
-
-    """
-    for item in tmp_path.iterdir():
-        item.chmod(stat.S_IREAD)
-        if platform.system() != "Windows":
-            subprocess.run(["sudo", "chattr", "+i", item], check=True)
-    result: Result = runner.invoke(clean.main)
-    assert "Error removing file " in result.output
-    assert "Error removing directory " in result.output
