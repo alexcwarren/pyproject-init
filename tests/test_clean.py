@@ -1,7 +1,4 @@
-import platform
-import stat
 from pathlib import Path
-import subprocess
 
 import pytest
 from click.testing import CliRunner, Result
