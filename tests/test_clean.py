@@ -197,18 +197,19 @@ def test_clean_swap_directory_with_file(
         assert f"{f}\" exists but is not a file." in result.output
 
 
-@pytest.mark.parametrize(
-    "",
-    [
-        (),
-        # rmv dir when ? (what causes error?)
-        #TODO
-        # rmv file when ? (what causes error?)
-        #TODO
-    ]
-)
-def test_clean_errors(
-    runner: CliRunner,
-    tmp_path: Path,
-) -> None:
-    pass
+#TODO
+# @pytest.mark.parametrize(
+#     "",
+#     [
+#         (),
+#         # rmv dir when ? (what causes error?)
+#         #TODO
+#         # rmv file when ? (what causes error?)
+#         #TODO
+#     ]
+# )
+# def test_clean_errors(
+#     runner: CliRunner,
+#     tmp_path: Path,
+# ) -> None:
+#     pass
