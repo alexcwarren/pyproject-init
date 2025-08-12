@@ -76,7 +76,9 @@ dependencies = [
 ]
 
 [tool.hatch.envs.test.scripts]
-test = "pytest {args:tests}"
+all = "pytest {args:tests}"
+pyproject-init = "pytest tests/test_pyproject_init.py {args:tests}"
+clean = "pytest tests/test_clean.py {args:tests}"
 
 [tool.hatch.envs.coverage]
 dependencies = [
@@ -86,7 +88,9 @@ dependencies = [
 ]
 
 [tool.hatch.envs.coverage.scripts]
-cov = "pytest --cov=pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
+cov-html = "pytest --cov=pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
+cov-xml= "pytest --cov=pyproject_init --cov-report=term-missing --cov-report=xml {args:tests}"
+cov = ["cov-html"]
 
 [tool.coverage.run]
 source_pkgs = ["pyproject_init", "tests", "scripts"]
