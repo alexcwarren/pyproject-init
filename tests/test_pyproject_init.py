@@ -56,7 +56,6 @@ def test_new_command_creates_project(runner: CliRunner, tmp_path: Path) -> None:
     result = runner.invoke(
         cli, ["new", project_name, "--output-dir", str(output_dir), "--no-input"]
     )
-    # import pdb; pdb.set_trace()
 
     # Assertions
     assert result.exit_code == 0
