@@ -1,3 +1,4 @@
+import stat
 from pathlib import Path
 
 import pytest
@@ -197,19 +198,19 @@ def test_clean_swap_directory_with_file(
         assert f"{f}\" exists but is not a file." in result.output
 
 
-#TODO
-# @pytest.mark.parametrize(
-#     "",
-#     [
-#         (),
-#         # rmv dir when ? (what causes error?)
-#         #TODO
-#         # rmv file when ? (what causes error?)
-#         #TODO
-#     ]
-# )
-# def test_clean_errors(
-#     runner: CliRunner,
-#     tmp_path: Path,
-# ) -> None:
-#     pass
+def test_clean_errors(
+    runner: CliRunner,
+    tmp_path: Path,
+) -> None:
+    """Test `clean.py` with directories/files lacking permission to delete.
+
+    Args:
+        runner (CliRunner): ...
+        tmp_path (Path): ...
+
+    """
+    for item in tmp_path.iterdir():
+        item.chmod(stat.S_IREAD)
+    result: Result = runner.invoke(clean.main)
+    assert "Error removing file " in result.output
+    assert "Error removing directory " in result.output
