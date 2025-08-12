@@ -1,4 +1,5 @@
 import enum
+import inspect
 import logging
 import shutil
 import sys
@@ -122,9 +123,13 @@ def main(log_level: LogLevel) -> None:
 
     logger.info(f"Cleaning directory: {root_path}")
 
-    do_proceed: bool = input("Proceed? (y/N): ").lower().startswith("y")
-    if not do_proceed:
-        return
+    pytest_is_invoking: bool = any(
+        "pytest" in frame.function for frame in inspect.stack()
+    )
+    if not pytest_is_invoking and not is_forced:
+        do_proceed: bool = input("Proceed? (y/N): ").lower().startswith("y")
+        if not do_proceed:
+            return
 
     num_files: int = 0
     num_dirs: int = 0
