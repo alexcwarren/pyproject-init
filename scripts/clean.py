@@ -2,7 +2,6 @@ import enum
 import inspect
 import logging
 import shutil
-import sys
 from pathlib import Path
 
 import click
@@ -167,13 +166,29 @@ def remove_file_safe(path: Path | str) -> int:
     help="Logging level.",
 )
 def main(log_level: LogLevel) -> None:
+    """Run main function for `clean.py`.
+
+    Args:
+        log_level (LogLevel): _description_
+
+    Raises:
+        NotADirectoryError: IF `PROJECT_DIR` is not a directory or doesn't exist.
+
+    """
+    if not PROJECT_DIR.is_dir():
+        raise NotADirectoryError(f'"{PROJECT_DIR.absolute()}" is not a valid directory')
+    clean(log_level, PROJECT_DIR)
+
+
+def clean(log_level: LogLevel, root_path: Path, is_forced: bool = False) -> None:
     """Run main function for clean.py.
 
     Args:
         log_level (LogLevel): Logging level.
+        root_path (Path): Root directory to clean from (used for testing clean.py).
+        is_forced (bool): Force execution and skip prompting (not recommended).
 
     """
-    root_path: Path = PROJECT_DIR
     level: int = LOG_LEVELS[log_level]
     logger.setLevel(level)
     output.set_logging_level(level)
@@ -211,6 +226,4 @@ def main(log_level: LogLevel) -> None:
 
 
 if __name__ == "__main__":
-    if not PROJECT_DIR.is_dir():
-        raise NotADirectoryError(f'"{PROJECT_DIR.absolute()}" is not a valid directory')
     main()
