@@ -211,6 +211,7 @@ def test_clean_errors(
     """
     for item in tmp_path.iterdir():
         item.chmod(stat.S_IREAD)
+    tmp_path.chmod(stat.S_IREAD | stat.S_IEXEC)
     result: Result = runner.invoke(clean.main)
     assert "Error removing file " in result.output
     assert "Error removing directory " in result.output
