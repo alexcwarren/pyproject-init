@@ -12,7 +12,17 @@ on:
       - main
 
 jobs:
+  precheck:
+    runs-on: ubuntu-latest
+
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "${{ github.event }}"
+
   lint:
+    needs: precheck
+
     runs-on: ubuntu-latest
 
     strategy:
@@ -37,6 +47,8 @@ jobs:
         run: hatch run lint:all
 
   typecheck:
+    needs: precheck
+
     runs-on: ubuntu-latest
 
     strategy:
@@ -61,6 +73,8 @@ jobs:
         run: hatch run type:typecheck
 
   test-pyproject-init:
+    needs: precheck
+
     runs-on: ubuntu-latest
 
     strategy:
@@ -85,6 +99,8 @@ jobs:
         run: hatch run test:pyproject-init
 
   test-clean:
+    needs: precheck
+
     runs-on: ubuntu-latest
 
     strategy:
@@ -109,6 +125,8 @@ jobs:
         run: hatch run test:clean
 
   coverage:
+    needs: precheck
+
     runs-on: ubuntu-latest
 
     strategy:
