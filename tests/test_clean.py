@@ -42,9 +42,10 @@ def tmp_path(tmp_path: Path) -> Path:
 MESSAGES: dict[LogLevel, list[str]] = {
     LogLevel.INFO: [
         "Cleaning directory: ",
-        "Cleaning complete: ",
-        f"{len(clean.FILES_TO_CLEAN)} files, ",
-        f"{len(clean.DIRS_TO_CLEAN)} directories removed.",
+        (
+            f"Cleaning complete: {len(clean.FILES_TO_CLEAN)} files,"
+            f" {len(clean.DIRS_TO_CLEAN)} directories removed."
+        ),
     ],
     LogLevel.DEBUG: [
         "Removing directory: ",
@@ -56,10 +57,16 @@ MESSAGES: dict[LogLevel, list[str]] = {
 # Skip lint formatting of pytest.mark.parametrize block:
 # fmt: off
 @pytest.mark.parametrize(
-    "log_level, expected_list, unexpected_list",
+    "log_level, expected_sequence, unexpected_sequence",
     [
         (None,      MESSAGES[LogLevel.INFO], MESSAGES[LogLevel.DEBUG]),
-        ("debug",   MESSAGES[LogLevel.DEBUG] + MESSAGES[LogLevel.INFO], []),
+        ("debug",
+                    [MESSAGES[LogLevel.INFO][0]]
+                    + [MESSAGES[LogLevel.DEBUG][0]] * len(clean.DIRS_TO_CLEAN)
+                    + [MESSAGES[LogLevel.DEBUG][1]] * len(clean.FILES_TO_CLEAN)
+                    + [MESSAGES[LogLevel.INFO][1]],
+                    []
+        ),
         ("info",    MESSAGES[LogLevel.INFO], MESSAGES[LogLevel.DEBUG]),
         ("warning", [], MESSAGES[LogLevel.DEBUG] + MESSAGES[LogLevel.INFO]),
         ("warn",    [], MESSAGES[LogLevel.DEBUG] + MESSAGES[LogLevel.INFO]),
@@ -71,8 +78,8 @@ def test_logging(
     runner: CliRunner,
     tmp_path: Path,
     log_level: str | None,
-    expected_list: list[str],
-    unexpected_list: list[str]
+    expected_sequence: list[str],
+    unexpected_sequence: list[str]
 ) -> None:
     """Test logging in `clean.py`.
 
@@ -80,18 +87,26 @@ def test_logging(
         runner (CliRunner): Provides functionality to invoke a `click` command.
         tmp_path (Path): Testing directory provided by `pytest`.
         log_level (str | None): Logging level to output at.
-        expected_list (list[str]): ...
-        unexpected_list (list[str]): ...
+        expected_sequence (list[str]): Sequence of expected logging messages.
+        unexpected_sequence (list[str]): Sequence of unexpected logging messages.
 
     """
+    # Verify tmp_path is not empty
+    assert verify_tmp_path(tmp_path)
+
     result: Result = (
         runner.invoke(clean.main)
         if log_level is None
         else runner.invoke(clean.main, ["--log-level", log_level])
     )
-    for expected in expected_list:
-        assert expected in result.output
-    for unexpected in unexpected_list:
+    assert result.exit_code == 0
+
+    output_sequence: list = [msg for msg in result.output.split("\n") if msg]
+    assert len(expected_sequence) == len(output_sequence)
+    for e, o in zip(expected_sequence, output_sequence, strict=False):
+        assert e in o
+
+    for unexpected in unexpected_sequence:
         assert unexpected not in result.output
 
 
