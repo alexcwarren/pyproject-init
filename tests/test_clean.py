@@ -158,7 +158,7 @@ def test_clean(runner: CliRunner, tmp_path: Path, args: tuple[str]) -> None:
     clean.FILES_TO_CLEAN = original_files
 
     # Invoke clean.py CLI under normal conditions
-    result: Result = runner.invoke(clean.main)
+    result = runner.invoke(clean.main)
     assert result.exit_code == 0
 
     # Verify tmp_path removed correct directories and files
@@ -168,7 +168,7 @@ def test_clean(runner: CliRunner, tmp_path: Path, args: tuple[str]) -> None:
         assert not tmp_path.joinpath(f).exists()
 
     # Verfiy successive run doesn't break anything
-    result: Result = runner.invoke(clean.main)
+    result = runner.invoke(clean.main)
     assert result.exit_code == 0
 
 
