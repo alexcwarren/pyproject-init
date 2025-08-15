@@ -121,9 +121,9 @@ def rmtree_safe(path: Path | str) -> int:
         output.debug(f"Removing directory: {dir_path}")
         try:
             shutil.rmtree(dir_path)
+            dir_removed += 1
         except OSError as e:
             output.error(f"Error removing directory {dir_path}: {e}")
-        dir_removed += 1
     elif dir_path.exists():
         output.warning(f'"{dir_path}" exists but is not a directory. Skipping rmtree.')
     else:
@@ -147,9 +147,9 @@ def remove_file_safe(path: Path | str) -> int:
         output.debug(f"Removing file: {dir_path}")
         try:
             dir_path.unlink()
+            file_removed += 1
         except OSError as e:
             output.error(f"Error removing file {dir_path}: {e}")
-        file_removed += 1
     elif dir_path.exists():
         output.warning(f'"{dir_path}" exists but is not a file. Skipping file removal.')
     else:
