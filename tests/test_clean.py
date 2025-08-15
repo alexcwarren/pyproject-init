@@ -324,14 +324,15 @@ def test_clean_errors(runner: CliRunner, tmp_path: Path) -> None:
         ),
     ]
 
-    i: int = 0
+    matches: list[bool] = []
     for line in result.output.split("\n"):
-        i += 1 if expected_output[i] in line else 0
-        if i >= len(expected_output):
+        if expected_output[len(matches)] in line:
+            matches.append(True)
+        if len(matches) >= len(expected_output):
             break
     # If all elements of expected_output where found in result.output (in order), i
     # should equal length of expected_output
-    assert i == len(expected_output)
+    assert len(matches) == len(expected_output)
 
 
 def verify_tmp_path(path: Path) -> bool:
