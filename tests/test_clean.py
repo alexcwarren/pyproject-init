@@ -148,8 +148,8 @@ def test_clean(runner: CliRunner, tmp_path: Path, args: tuple[str]) -> None:
     assert verify_tmp_path(tmp_path)
 
     # Invoke clean.py CLI when clean.DIRS_TO_CLEAN and clean.FILES_TO_CLEAN are empty
-    clean.DIRS_TO_CLEAN, original_dirs = [], clean.DIRS_TO_CLEAN
-    clean.FILES_TO_CLEAN, original_files = [], clean.FILES_TO_CLEAN
+    clean.DIRS_TO_CLEAN, original_dirs = [], clean.DIRS_TO_CLEAN.copy()
+    clean.FILES_TO_CLEAN, original_files = [], clean.FILES_TO_CLEAN.copy()
 
     result: Result = runner.invoke(clean.main, args)
     assert result.exit_code == 0
@@ -226,8 +226,8 @@ def test_clean_does_not_exist(
     # Verify tmp_path is not empty
     assert verify_tmp_path(tmp_path)
 
-    clean.DIRS_TO_CLEAN, original_dirs = directories, clean.DIRS_TO_CLEAN
-    clean.FILES_TO_CLEAN, original_files = files, clean.FILES_TO_CLEAN
+    clean.DIRS_TO_CLEAN, original_dirs = directories, clean.DIRS_TO_CLEAN.copy()
+    clean.FILES_TO_CLEAN, original_files = files, clean.FILES_TO_CLEAN.copy()
 
     result: Result = runner.invoke(clean.main, ["-l", "debug"])
     assert result.exit_code == 0
@@ -269,8 +269,8 @@ def test_clean_swap_directory_with_file(
     # Verify tmp_path is not empty
     assert verify_tmp_path(tmp_path)
 
-    clean.DIRS_TO_CLEAN, original_dirs = directories, clean.DIRS_TO_CLEAN
-    clean.FILES_TO_CLEAN, original_files = files, clean.FILES_TO_CLEAN
+    clean.DIRS_TO_CLEAN, original_dirs = directories, clean.DIRS_TO_CLEAN.copy()
+    clean.FILES_TO_CLEAN, original_files = files, clean.FILES_TO_CLEAN.copy()
 
     result: Result = runner.invoke(clean.main, ["-l", "debug"])
     assert result.exit_code == 0
