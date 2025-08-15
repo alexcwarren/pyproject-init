@@ -286,6 +286,54 @@ def test_clean_swap_directory_with_file(
         assert f"{f}\" exists but is not a file." in result.output
 
 
+def test_clean_errors(runner: CliRunner, tmp_path: Path) -> None:
+    """Verify OSErrors are handled properly when running `clean.py`.
+
+    Args:
+        runner (CliRunner): Provides functionality to invoke a `click` command.
+        tmp_path (Path): Testing directory provided by `pytest`.
+
+    """
+    # Verify tmp_path is not empty
+    assert verify_tmp_path(tmp_path)
+
+    # Create new file in a directory from DIRS_TO_CLEAN
+    new_file: Path = tmp_path.joinpath(clean.DIRS_TO_CLEAN[0]).joinpath("test_file")
+    new_file.touch()
+
+    # Add new_file to FILES_TO_CLEAN so running clean.py will trigger an error both while
+    # attempting to delete the directory containing new_file and when attempting to
+    # delete new_file itself
+    original_files: list[str] = clean.FILES_TO_CLEAN
+    clean.FILES_TO_CLEAN.append(f"{new_file.parent.name}/{new_file.name}")
+
+    # Run clean.py while new_file is open
+    with Path.open(new_file) as _:
+        result: Result = runner.invoke(clean.main, ["-l", "debug"])
+    assert result.exit_code == 0
+
+    clean.FILES_TO_CLEAN = original_files
+
+    expected_output: list[str] = [
+        "Cleaning directory: ",
+        "Error removing directory",
+        "Error removing file",
+        (
+            f"Cleaning complete: {len(clean.FILES_TO_CLEAN) - 1} files,"
+            f" {len(clean.DIRS_TO_CLEAN) - 1} directories removed."
+        ),
+    ]
+
+    i: int = 0
+    for line in result.output.split("\n"):
+        i += 1 if expected_output[i] in line else 0
+        if i >= len(expected_output):
+            break
+    # If all elements of expected_output where found in result.output (in order), i
+    # should equal length of expected_output
+    assert i == len(expected_output)
+
+
 def verify_tmp_path(path: Path) -> bool:
     """Verify `pytest`'s `tmp_path` contains correct directories and files.
 
