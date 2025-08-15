@@ -170,6 +170,33 @@ def test_clean(runner: CliRunner, tmp_path: Path, args: tuple[str]) -> None:
     # Verfiy successive run doesn't break anything
     result: Result = runner.invoke(clean.main)
     assert result.exit_code == 0
+
+
+@pytest.mark.parametrize(
+    "bad_args",
+    [
+        ("--log-level", ""),
+        ("-l", ""),
+        ("--log-level", "inf0"),
+        ("--log-level", "d3bug"),
+        ("--log-level", "3RR0R"),
+        ("log"),
+        ("bad"),
+    ]
+)
+def test_clean_bad_args(runner: CliRunner, tmp_path: Path, bad_args: tuple[str]) -> None:
+    """Test running `clean.py` with bad CLI arguments.
+
+    Args:
+        runner (CliRunner): Provides functionality to invoke a `click` command.
+        tmp_path (Path): Testing directory provided by `pytest`.
+        bad_args (tuple[str]): Tuple of invalid arguments.
+
+    """
+    # Verify tmp_path is not empty
+    assert verify_tmp_path(tmp_path)
+
+    result: Result = runner.invoke(clean.main, bad_args)
     assert result.exit_code != 0
 
 
