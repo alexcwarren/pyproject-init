@@ -260,18 +260,20 @@ def test_clean_swap_directory_with_file(
     """Test `clean.py` when directory swapped with file and vice versa.
 
     Args:
-        runner (CliRunner): ...
-        tmp_path (Path): ...
-        directories (list[str]): ...
-        files (list[str]): ...
+        runner (CliRunner): Provides functionality to invoke a `click` command.
+        tmp_path (Path): Testing directory provided by `pytest`.
+        directories (list[str]): List of "directory/ies" that are actually file/s.
+        files (list[str]): List of "file/s" that are actually directory/ies.
 
     """
-    assert any(tmp_path.iterdir())
+    # Verify tmp_path is not empty
+    assert verify_tmp_path(tmp_path)
 
-    clean.DIRS_TO_CLEAN, original_dirs = directories.copy(), clean.DIRS_TO_CLEAN
-    clean.FILES_TO_CLEAN, original_files = files.copy(), clean.FILES_TO_CLEAN
+    clean.DIRS_TO_CLEAN, original_dirs = directories, clean.DIRS_TO_CLEAN
+    clean.FILES_TO_CLEAN, original_files = files, clean.FILES_TO_CLEAN
 
     result: Result = runner.invoke(clean.main, ["-l", "debug"])
+    assert result.exit_code == 0
 
     clean.DIRS_TO_CLEAN = original_dirs
     clean.FILES_TO_CLEAN = original_files
