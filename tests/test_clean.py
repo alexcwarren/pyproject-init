@@ -110,24 +110,67 @@ def test_logging(
         assert unexpected not in result.output
 
 
-def test_clean(runner: CliRunner, tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "args",
+    [
+        ("--log-level", "info"),
+        ("--log-level", "INFO"),
+        ("--log-level", "debug"),
+        ("--log-level", "DEBUG"),
+        ("--log-level", "warning"),
+        ("--log-level", "WARNING"),
+        ("--log-level", "warn"),
+        ("--log-level", "WARN"),
+        ("--log-level", "error"),
+        ("--log-level", "ERROR"),
+        ("-l", "info"),
+        ("-l", "INFO"),
+        ("-l", "debug"),
+        ("-l", "DEBUG"),
+        ("-l", "warning"),
+        ("-l", "WARNING"),
+        ("-l", "warn"),
+        ("-l", "WARN"),
+        ("-l", "error"),
+        ("-l", "ERROR"),
+    ]
+)
+def test_clean(runner: CliRunner, tmp_path: Path, args: tuple[str]) -> None:
     """Test standard use of `clean.py`.
 
     Args:
         runner (CliRunner): Provides functionality to invoke a `click` command.
         tmp_path (Path): Testing directory provided by `pytest`.
+        args (tuple[str]): Tuple of valid argument strings.
 
     """
     # Verify tmp_path is not empty
-    assert any(tmp_path.iterdir())
+    assert verify_tmp_path(tmp_path)
 
-    # Invoke clean.py CLI
-    runner.invoke(clean.main)
+    # Invoke clean.py CLI when clean.DIRS_TO_CLEAN and clean.FILES_TO_CLEAN are empty
+    clean.DIRS_TO_CLEAN, original_dirs = [], clean.DIRS_TO_CLEAN
+    clean.FILES_TO_CLEAN, original_files = [], clean.FILES_TO_CLEAN
+
+    result: Result = runner.invoke(clean.main, args)
+    assert result.exit_code == 0
+
+    clean.DIRS_TO_CLEAN = original_dirs
+    clean.FILES_TO_CLEAN = original_files
+
+    # Invoke clean.py CLI under normal conditions
+    result: Result = runner.invoke(clean.main)
+    assert result.exit_code == 0
 
     # Verify tmp_path removed correct directories and files
-    for item in tmp_path.iterdir():
-        assert item not in clean.DIRS_TO_CLEAN
-        assert item not in clean.FILES_TO_CLEAN
+    for d in clean.DIRS_TO_CLEAN:
+        assert not tmp_path.joinpath(d).exists()
+    for f in clean.FILES_TO_CLEAN:
+        assert not tmp_path.joinpath(f).exists()
+
+    # Verfiy successive run doesn't break anything
+    result: Result = runner.invoke(clean.main)
+    assert result.exit_code == 0
+    assert result.exit_code != 0
 
 
 # fmt: off
