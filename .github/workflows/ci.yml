@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - run: echo "Action=${{ github.event.action }} Number=${{ github.event.number }} Pull request=${{ github.event.pull_request }} Created=${{ github.event.created }} Ref=${{ github.event.ref }} HEAD Commit message=${{ github.event.head_commit.message }}"
+      - run: echo "Name==${{ github.event_name }} Action=${{ github.event.action }} Number=${{ github.event.number }} Pull request=${{ github.event.pull_request }} Created=${{ github.event.created }} Ref=${{ github.event.ref }} HEAD Commit message=${{ github.event.head_commit.message }}"
 
   lint:
     needs: precheck
