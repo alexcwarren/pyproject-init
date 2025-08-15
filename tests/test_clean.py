@@ -1,3 +1,4 @@
+import platform
 from pathlib import Path
 
 import pytest
@@ -297,33 +298,40 @@ def test_clean_errors(runner: CliRunner, tmp_path: Path) -> None:
     # Verify tmp_path is not empty
     assert verify_tmp_path(tmp_path)
 
-    new_dir: Path = tmp_path.joinpath("test_dir")
+    # Create new file in a new directory
+    new_dir: Path = tmp_path.joinpath("new_dir")
     new_dir.mkdir()
-
-    original_dirs: list[str] = clean.DIRS_TO_CLEAN
-    clean.DIRS_TO_CLEAN.append(new_dir)
-
-    # Create new file in a directory from DIRS_TO_CLEAN
-    new_file: Path = tmp_path.joinpath(clean.DIRS_TO_CLEAN[0]).joinpath("test_file")
+    new_file: Path = new_dir.joinpath("new_file")
     new_file.touch()
+    locked_dir: Path = tmp_path.joinpath(clean.DIRS_TO_CLEAN[0])
 
     # Add new_file to FILES_TO_CLEAN so running clean.py will trigger an error both while
     # attempting to delete the directory containing new_file and when attempting to
     # delete new_file itself
-    original_files: list[str] = clean.FILES_TO_CLEAN
+    original_dirs: list[str] = clean.DIRS_TO_CLEAN.copy()
+    original_files: list[str] = clean.FILES_TO_CLEAN.copy()
     clean.FILES_TO_CLEAN.append(f"{new_file.parent.name}/{new_file.name}")
 
-    # TODO
-    Path.chmod(new_dir, 0o000)
-    Path.chmod(new_file, 0o000)
+    new_file.chmod(0o200)
+    new_dir.chmod(0o555)
+    locked_dir.chmod(0o300)
 
     # Run clean.py while new_file is open
-    # with Path.open(new_file) as _:
-    result: Result = runner.invoke(clean.main, ["-l", "debug"])
+    result: Result | None = None
+    if platform.system().lower().startswith("win"):
+        clean.DIRS_TO_CLEAN.append(new_dir.name)
+        with new_file.open("r"):
+            result = runner.invoke(clean.main, ["-l", "debug"])
+    else:
+        result = runner.invoke(clean.main, ["-l", "debug"])
     assert result.exit_code == 0
 
-    clean.DIRS_TO_CLEAN = original_dirs
-    clean.FILES_TO_CLEAN = original_files
+    if new_dir.exists():
+        new_dir.chmod(0o755)
+    if new_file.exists():
+        new_file.chmod(0o644)
+    if locked_dir.exists():
+        locked_dir.chmod(0o755)
 
     expected_output: list[str] = [
         "Cleaning directory: ",
@@ -335,6 +343,9 @@ def test_clean_errors(runner: CliRunner, tmp_path: Path) -> None:
         ),
     ]
 
+    clean.DIRS_TO_CLEAN = original_dirs
+    clean.FILES_TO_CLEAN = original_files
+
     matches: list[bool] = [False] * len(expected_output)
     i: int = 0
     for line in result.output.split("\n"):
@@ -343,7 +354,7 @@ def test_clean_errors(runner: CliRunner, tmp_path: Path) -> None:
             i += 1
         if i >= len(expected_output):
             break
-    print(result.output)
+
     # If all elements of expected_output where found in result.output (in order), i
     # should equal length of expected_output
     assert matches.count(True) == len(expected_output)
