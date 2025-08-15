@@ -332,6 +332,7 @@ def test_clean_errors(runner: CliRunner, tmp_path: Path) -> None:
             i += 1
         if i >= len(expected_output):
             break
+    print(result.output)
     # If all elements of expected_output where found in result.output (in order), i
     # should equal length of expected_output
     assert matches.count(True) == len(expected_output)
