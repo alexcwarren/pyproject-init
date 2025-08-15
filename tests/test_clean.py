@@ -195,3 +195,25 @@ def test_clean_swap_directory_with_file(
     assert len(files) > 0
     for f in files:
         assert f"{f}\" exists but is not a file." in result.output
+
+
+def verify_tmp_path(path: Path) -> bool:
+    """Verify `pytest`'s `tmp_path` contains correct directories and files.
+
+    Args:
+        path (Path): `pytest`'s `tmp_path` fixture.
+
+    Returns:
+        bool: Returns `True` if `tmp_path` contains all correct directories and files.
+              Returns `False` otherwise.
+
+    """
+    # Concatenate DIRS_TO_CLEAN and FILES_TO_CLEAN into one list of items:
+    #     clean.DIRS_TO_CLEAN + clean.FILES_TO_CLEAN
+    # Create sequence from this concatenated list where each element is True if each item
+    # exists at least in one location in `path`:
+    #     any(path.rglob(item)) for item in clean.DIRS_TO_CLEAN + clean.FILES_TO_CLEAN
+    # return True if any of this sequence's elements is True, otherwise False:
+    return any(
+        any(path.rglob(item)) for item in clean.DIRS_TO_CLEAN + clean.FILES_TO_CLEAN
+    )
