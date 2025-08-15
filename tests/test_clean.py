@@ -297,6 +297,12 @@ def test_clean_errors(runner: CliRunner, tmp_path: Path) -> None:
     # Verify tmp_path is not empty
     assert verify_tmp_path(tmp_path)
 
+    new_dir: Path = tmp_path.joinpath("test_dir")
+    new_dir.mkdir()
+
+    original_dirs: list[str] = clean.DIRS_TO_CLEAN
+    clean.DIRS_TO_CLEAN.append(new_dir)
+
     # Create new file in a directory from DIRS_TO_CLEAN
     new_file: Path = tmp_path.joinpath(clean.DIRS_TO_CLEAN[0]).joinpath("test_file")
     new_file.touch()
@@ -307,11 +313,16 @@ def test_clean_errors(runner: CliRunner, tmp_path: Path) -> None:
     original_files: list[str] = clean.FILES_TO_CLEAN
     clean.FILES_TO_CLEAN.append(f"{new_file.parent.name}/{new_file.name}")
 
+    # TODO
+    Path.chmod(new_dir, 0o000)
+    Path.chmod(new_file, 0o000)
+
     # Run clean.py while new_file is open
-    with Path.open(new_file) as _:
-        result: Result = runner.invoke(clean.main, ["-l", "debug"])
+    # with Path.open(new_file) as _:
+    result: Result = runner.invoke(clean.main, ["-l", "debug"])
     assert result.exit_code == 0
 
+    clean.DIRS_TO_CLEAN = original_dirs
     clean.FILES_TO_CLEAN = original_files
 
     expected_output: list[str] = [
