@@ -9,10 +9,10 @@ from scripts.clean import LogLevel
 
 @pytest.fixture(scope="function")
 def runner() -> CliRunner:
-    """Fixture to provide a CliRunner instance.
+    """Fixture to provide a `CliRunner` instance.
 
     Returns:
-        CliRunner: instance of CliRunner class.
+        CliRunner: instance of `CliRunner` class.
 
     """
     return CliRunner()
@@ -20,13 +20,13 @@ def runner() -> CliRunner:
 
 @pytest.fixture(scope="function")
 def tmp_path(tmp_path: Path) -> Path:
-    """Provide `pytest`'s tmp_path with directories and files to clean.
+    """Provide `pytest`'s `tmp_path` fixture with directories and files to clean.
 
     Args:
-        tmp_path (Path): `pytest`'s tmp_path Path fixture.
+        tmp_path (Path): `pytest`'s `tmp_path` fixture.
 
     Returns:
-        Path: tmp_path containing newly created directories and files.
+        Path: `tmp_path` containing newly created directories and files.
 
     """
     directories: list[str] = clean.DIRS_TO_CLEAN.copy()
