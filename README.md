@@ -1,87 +1,123 @@
 # pyproject-init
 
-A powerful CLI tool to automate the creation of new Python projects, pre-configured with modern best practices.
+Create a Python project from the command line with a ready-to-use development setup.
 
-`pyproject-init` aims to streamline the setup of Python projects by integrating:
+`pyproject-init` uses Click and Cookiecutter to generate projects with a `src/` package layout, Hatch/Hatchling configuration, Ruff, MyPy, pytest, pytest-randomly, and GitHub Actions configuration. The bundled default template includes starter code and a basic test so you can run the project's checks immediately.
 
-* **Hatch:** For robust project management, build system, and environment handling.
-* **`pytest` & `pytest-randomly`:** For comprehensive testing and ensuring test stability.
-* **Ruff:** For lightning-fast code linting and formatting.
-* **MyPy:** For static type checking to improve code quality.
-* **GitHub Actions:** For automated Continuous Integration (CI/CD) workflows.
+## Installation
 
-## Installation (for Users)
+Requires Python 3.10 or newer. The project's CI covers Python 3.10, 3.11, and 3.12.
 
-Users can install `pyproject-init` via pip:
+Once the package is published on PyPI:
 
-```bash
-pip install pyproject-init
+```console
+python -m pip install pyproject-init
 ```
 
-## Usage (for Users)
+For a source checkout, install from the repository root:
 
-Once installed, you can use the pyproject-init CLI:
-
-```bash
-pyproject-init new [PROJECT_NAME] --output-dir <path> --template <name>
+```console
+python -m pip install .
 ```
 
-Example:
+Install Hatch to run the generated project's development commands:
 
-```bash
-# Create a new project interactively in the current directory
+```console
+python -m pip install hatch
+```
+
+## Quick start
+
+Create a project interactively in the current directory:
+
+```console
 pyproject-init new
-
-# Create a new project named 'my-cool-app' in a specific directory
-pyproject-init new my-cool-app --output-dir C:\Users\YourUser\Documents\NewProjects
-
-# Create a new project using default values without prompts
-pyproject-init new --no-input
 ```
 
-## Development (for Contributors/Maintainers)
+Or supply a project name:
 
-To contribute to or develop pyproject-init itself:
+```console
+pyproject-init new my-cool-app
+```
 
-1. Clone this repository:
+Follow the prompts for project metadata and the Python version. After generation, enter the directory reported by the command:
 
-    ```PowerShell
-    git clone [https://github.com/your-username/pyproject-init.git](https://github.com/your-username/pyproject-init.git)
-    cd pyproject-init
-    ```
+```console
+cd my-cool-app
+hatch run all
+```
 
-1. Install Hatch and set up the development environment:
-Ensure you have Python 3.10.5 (or compatible) installed via pyenv and set locally:
+This runs the generated project's linting, type checking, and tests. Read its generated README for the application command and next steps.
 
-    ```PowerShell
-    pyenv install 3.10.5
-    pyenv local 3.10.5
-    pip install hatch
-    hatch env create
-    ```
+## Usage
 
-1. Run Development Checks:
+```text
+pyproject-init new [OPTIONS] [PROJECT_NAME]
+```
 
-    ```PowerShell
-    hatch run all # Runs linting, type checking, and tests for the CLI tool's code
-    ```
+| Option | Purpose |
+| --- | --- |
+| `-o, --output-dir DIRECTORY` | Parent directory in which to create the project. Use an absolute path when supplying this option. |
+| `-t, --template TEXT` | Select a bundled template; `default` is the supported starting point. |
+| `--no-input` | Skip prompts and use template defaults, together with the supplied project name. |
+| `--help` | Display command help. |
 
-1. Run the CLI tool locally during development:
+### Choose an output directory
 
-    ```PowerShell
-    # This executes your 'new' command directly within the Hatch environment
-    hatch run pyproject-init new my-dev-project-test
-    # Or interactively:
-    hatch run pyproject-init new
-    ```
+Windows:
 
-## Project Structure (for Developers)
+```powershell
+pyproject-init new my-cool-app --output-dir "C:\Users\YourUser\Documents\NewProjects"
+```
 
-* `src/pyproject_init/`: Contains the Python source code for the pyproject-init CLI application.
-  * `src/pyproject_init/cli.py`: The main Click CLI application.
-  * `src/pyproject_init/templates/` (Future): Will hold the Cookiecutter template files that the CLI tool uses.
-* `tests/`: Contains unit tests for the pyproject-init CLI application's own code.
-* `pyproject.toml`: Project metadata, dependencies, and Hatch configuration for the pyproject-init CLI tool itself.
-* `.github/workflows/`: GitHub Actions workflows for the pyproject-init CLI tool's CI/CD.
+macOS/Linux:
 
-> * **Remember to update `your-username` in the `README.md`!**
+```console
+pyproject-init new my-cool-app --output-dir /absolute/path/to/projects
+```
+
+The project is created beneath the output directory, for example `NewProjects/my-cool-app`.
+
+### Use defaults without prompts
+
+```console
+pyproject-init new my-cool-app --template default --no-input
+```
+
+Review the generated author information, description, and other metadata before publishing your project.
+
+### Get help
+
+```console
+pyproject-init --help
+pyproject-init new --help
+```
+
+## Project names
+
+The project folder and distribution name can contain hyphens, while Python package names must be valid identifiers. For example:
+
+```text
+my-cool-app/
+├── README.md
+├── pyproject.toml
+├── src/
+│   └── my_cool_app/
+│       ├── __about__.py
+│       ├── __init__.py
+│       └── main.py
+└── tests/
+    └── test_main.py
+```
+
+The template calls these values `project_name` (`my-cool-app`) and `project_slug` (`my_cool_app`). Keep the package name importable if you change it during the prompts.
+
+## Current limitations
+
+- Explicit `--output-dir` values currently need to be absolute paths; relative-path support is planned.
+- Use a new destination. The CLI includes protection against creating a project at an existing destination.
+- The bundled `default` template is the established workflow. Broader custom-template support and additional template validation remain follow-up work.
+
+## Contributing
+
+For setup, architecture, template maintenance, checks, troubleshooting, and release preparation, see [README_DEV.md](README_DEV.md).
