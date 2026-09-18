@@ -26,12 +26,15 @@ dependencies = [
 ]
 
 [project.scripts]
-{{ cookiecutter.project_slug }} = "{{ cookiecutter.project_slug }}.main:main"
+{{ cookiecutter.project_name }} = "{{ cookiecutter.project_slug }}.main:main"
 
 [project.urls]
 Documentation = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_slug }}#readme"
 Issues = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_slug }}/issues"
 Source = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_slug }}"
+
+[tool.hatch.version]
+path = "src/{{ cookiecutter.project_slug }}/__about__.py"
 
 [tool.hatch.envs.default]
 dependencies = [
@@ -86,6 +89,8 @@ dependencies = [
 test = "pytest {args:tests}"
 cov = "pytest --cov={{ cookiecutter.project_slug }} --cov-report=term-missing --cov-report=html {args:tests}"
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/{{ cookiecutter.project_slug }}"]
 
 [tool.coverage.run]
 source_pkgs = ["{{ cookiecutter.project_slug }}", "tests"]
@@ -97,7 +102,8 @@ omit = [
 
 [tool.coverage.paths]
 "{{ cookiecutter.project_slug }}" = [
-  "src/{{ cookiecutter.project_slug }}", "*/{{ cookiecutter.project_slug }}/src/{{ cookiecutter.project_slug }}"
+  "src/{{ cookiecutter.project_slug }}",
+  "*/{{ cookiecutter.project_name }}/src/{{ cookiecutter.project_slug }}",
 ]
 tests = ["tests", "*/{{ cookiecutter.project_slug }}/tests"]
 
@@ -135,7 +141,6 @@ select = [
 ]
 ignore = [
   "D100", "D104", "D105", "D106", "D107", "D203", "D213", "D406", "D407", # Docstring rules
-  "ANN101", "ANN102", # missing type annotation for self, cls
 ]
 
 [tool.ruff.lint.per-file-ignores]

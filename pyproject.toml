@@ -52,7 +52,7 @@ lint-all = ["format", "check-fix"]
 typecheck = "mypy src tests scripts"
 test = "pytest {args:tests}"
 all = ["lint-all", "typecheck", "test"]
-cov = "pytest --cov-pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
+cov = "pytest --cov=pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
 clean = "python scripts/clean.py {args}"
 
 [tool.hatch.envs.lint]
@@ -76,7 +76,9 @@ dependencies = [
 ]
 
 [tool.hatch.envs.test.scripts]
-test = "pytest {args:tests}"
+all = "pytest {args:tests}"
+pyproject-init = "pytest tests/test_pyproject_init.py {args:tests}"
+clean = "pytest tests/test_clean.py {args:tests}"
 
 [tool.hatch.envs.coverage]
 dependencies = [
@@ -86,7 +88,9 @@ dependencies = [
 ]
 
 [tool.hatch.envs.coverage.scripts]
-cov = "pytest --cov=pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
+cov-html = "pytest --cov=pyproject_init --cov-report=term-missing --cov-report=html {args:tests}"
+cov-xml= "pytest --cov=pyproject_init --cov-report=term-missing --cov-report=xml {args:tests}"
+cov = ["cov-html"]
 
 [tool.coverage.run]
 source_pkgs = ["pyproject_init", "tests", "scripts"]
@@ -129,7 +133,6 @@ select = [
 ]
 ignore = [
   "D100", "D104", "D105", "D106", "D107", "D203", "D213", "D406", "D407", # Docstring rules
-  "ANN101", "ANN102", # missing type annotation for self, cls
 ]
 
 [tool.ruff.lint.per-file-ignores]
