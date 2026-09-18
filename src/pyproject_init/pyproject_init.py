@@ -62,6 +62,11 @@ def new(
     if not template_path.is_dir():
         raise click.ClickException(f"Template '{template}' not found at {template_path}")
 
+    target_dir = output_dir / str(project_name)
+
+    if target_dir.exists():
+        raise click.ClickException(f"Project directory already exists: {target_dir}")
+
     click.echo(f"Creating new project using template '{template}'...")
     click.echo(f"Output directory: {output_dir}")
 

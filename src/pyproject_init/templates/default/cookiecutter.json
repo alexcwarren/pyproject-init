@@ -1,6 +1,6 @@
 {
-  "project_name": "My Awesome Python Project",
-  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_') }}",
+  "project_name": "python-project",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_').lower().replace('-', '_') }}",
   "author_name": "Your Name",
   "author_email": "your_email@example.com",
   "user_name": "{{ cookiecutter.author_name | slugify }}",
