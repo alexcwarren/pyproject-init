@@ -5,47 +5,43 @@ import pytest
 from click.testing import CliRunner, Result
 
 import scripts.clean as clean
-from scripts.clean import LogLevel
+from scripts.clean import CleanConfig, LogLevel, build_default_config
 
 
 @pytest.fixture(scope="function")
 def runner() -> CliRunner:
-    """Fixture to provide a `CliRunner` instance.
-
-    Returns:
-        CliRunner: instance of `CliRunner` class.
-
-    """
+    """Fixture to provide a `CliRunner` instance."""
     return CliRunner()
 
 
-@pytest.fixture(scope="function")
-def tmp_path(tmp_path: Path) -> Path:
-    """Provide `pytest`'s `tmp_path` fixture with directories and files to clean.
-
-    Args:
-        tmp_path (Path): `pytest`'s `tmp_path` fixture.
-
-    Returns:
-        Path: `tmp_path` containing newly created directories and files.
-
-    """
-    directories: list[str] = clean.DIRS_TO_CLEAN.copy()
+def populate_tmp_path(base_path: Path, directories: list[str], files: list[str]) -> None:
+    """Populate a directory with test directories and files."""
     for d in directories:
-        tmp_path.joinpath(d).mkdir(parents=True)
-    files: list[str] = clean.FILES_TO_CLEAN.copy()
+        base_path.joinpath(d).mkdir(parents=True)
     for f in files:
-        tmp_path.joinpath(f).touch()
-    clean.PROJECT_DIR = tmp_path
-    return tmp_path
+        file_path = base_path.joinpath(f)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.touch()
+
+
+def build_config(
+    root_dir: Path, directories: list[str], files: list[str]
+) -> CleanConfig:
+    """Build a clean config from relative paths."""
+    return CleanConfig(
+        root_dir=root_dir,
+        dirs_to_clean=[root_dir.joinpath(d) for d in directories],
+        files_to_clean=[root_dir.joinpath(f) for f in files],
+        assume_yes=True,
+    )
 
 
 MESSAGES: dict[LogLevel, list[str]] = {
     LogLevel.INFO: [
         "Cleaning directory: ",
         (
-            f"Cleaning complete: {len(clean.FILES_TO_CLEAN)} files,"
-            f" {len(clean.DIRS_TO_CLEAN)} directories removed."
+            f"Cleaning complete: {len(clean.DEFAULT_FILES_TO_CLEAN)} files,"
+            f" {len(clean.DEFAULT_DIRS_TO_CLEAN)} directories removed."
         ),
     ],
     LogLevel.DEBUG: [
@@ -63,8 +59,8 @@ MESSAGES: dict[LogLevel, list[str]] = {
         (None,      MESSAGES[LogLevel.INFO], MESSAGES[LogLevel.DEBUG]),
         ("debug",
                     [MESSAGES[LogLevel.INFO][0]]
-                    + [MESSAGES[LogLevel.DEBUG][0]] * len(clean.DIRS_TO_CLEAN)
-                    + [MESSAGES[LogLevel.DEBUG][1]] * len(clean.FILES_TO_CLEAN)
+                    + [MESSAGES[LogLevel.DEBUG][0]] * len(clean.DEFAULT_DIRS_TO_CLEAN)
+                    + [MESSAGES[LogLevel.DEBUG][1]] * len(clean.DEFAULT_FILES_TO_CLEAN)
                     + [MESSAGES[LogLevel.INFO][1]],
                     []
         ),
@@ -76,101 +72,65 @@ MESSAGES: dict[LogLevel, list[str]] = {
 )
 # fmt: on
 def test_logging(
-    runner: CliRunner,
     tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
     log_level: str | None,
     expected_sequence: list[str],
-    unexpected_sequence: list[str]
+    unexpected_sequence: list[str],
 ) -> None:
-    """Test logging in `clean.py`.
-
-    Args:
-        runner (CliRunner): Provides functionality to invoke a `click` command.
-        tmp_path (Path): Testing directory provided by `pytest`.
-        log_level (str | None): Logging level to output at.
-        expected_sequence (list[str]): Sequence of expected logging messages.
-        unexpected_sequence (list[str]): Sequence of unexpected logging messages.
-
-    """
-    # Verify tmp_path is not empty
-    assert verify_tmp_path(tmp_path)
-
-    result: Result = (
-        runner.invoke(clean.main)
-        if log_level is None
-        else runner.invoke(clean.main, ["--log-level", log_level])
+    """Test logging in `clean.py`."""
+    populate_tmp_path(
+        tmp_path,
+        list(clean.DEFAULT_DIRS_TO_CLEAN),
+        list(clean.DEFAULT_FILES_TO_CLEAN),
     )
-    assert result.exit_code == 0
+    config = build_default_config(tmp_path, assume_yes=True)
 
-    output_sequence: list = [msg for msg in result.output.split("\n") if msg]
+    if log_level is None:
+        clean.clean(LogLevel.INFO, config)
+    else:
+        clean.clean(LogLevel[log_level.upper()], config)
+
+    output = capsys.readouterr().out
+    output_sequence: list[str] = [msg for msg in output.split("\n") if msg]
     assert len(expected_sequence) == len(output_sequence)
-    for e, o in zip(expected_sequence, output_sequence, strict=False):
-        assert e in o
+    for expected, observed in zip(expected_sequence, output_sequence, strict=False):
+        assert expected in observed
 
     for unexpected in unexpected_sequence:
-        assert unexpected not in result.output
+        assert unexpected not in output
 
 
-@pytest.mark.parametrize(
-    "args",
-    [
-        ("--log-level", "info"),
-        ("--log-level", "INFO"),
-        ("--log-level", "debug"),
-        ("--log-level", "DEBUG"),
-        ("--log-level", "warning"),
-        ("--log-level", "WARNING"),
-        ("--log-level", "warn"),
-        ("--log-level", "WARN"),
-        ("--log-level", "error"),
-        ("--log-level", "ERROR"),
-        ("-l", "info"),
-        ("-l", "INFO"),
-        ("-l", "debug"),
-        ("-l", "DEBUG"),
-        ("-l", "warning"),
-        ("-l", "WARNING"),
-        ("-l", "warn"),
-        ("-l", "WARN"),
-        ("-l", "error"),
-        ("-l", "ERROR"),
-    ]
-)
-def test_clean(runner: CliRunner, tmp_path: Path, args: tuple[str]) -> None:
-    """Test standard use of `clean.py`.
+def test_clean(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Test standard use of `clean.py`."""
+    populate_tmp_path(
+        tmp_path,
+        list(clean.DEFAULT_DIRS_TO_CLEAN),
+        list(clean.DEFAULT_FILES_TO_CLEAN),
+    )
 
-    Args:
-        runner (CliRunner): Provides functionality to invoke a `click` command.
-        tmp_path (Path): Testing directory provided by `pytest`.
-        args (tuple[str]): Tuple of valid argument strings.
+    empty_config = CleanConfig(
+        root_dir=tmp_path,
+        dirs_to_clean=[],
+        files_to_clean=[],
+        assume_yes=True,
+    )
+    clean.clean(LogLevel.INFO, empty_config)
+    assert "Cleaning complete: 0 files, 0 directories removed." in (
+        capsys.readouterr().out
+    )
 
-    """
-    # Verify tmp_path is not empty
-    assert verify_tmp_path(tmp_path)
-
-    # Invoke clean.py CLI when clean.DIRS_TO_CLEAN and clean.FILES_TO_CLEAN are empty
-    clean.DIRS_TO_CLEAN, original_dirs = [], clean.DIRS_TO_CLEAN.copy()
-    clean.FILES_TO_CLEAN, original_files = [], clean.FILES_TO_CLEAN.copy()
-
-    result: Result = runner.invoke(clean.main, args)
-    assert result.exit_code == 0
-
-    clean.DIRS_TO_CLEAN = original_dirs
-    clean.FILES_TO_CLEAN = original_files
-
-    # Invoke clean.py CLI under normal conditions
-    result = runner.invoke(clean.main)
-    assert result.exit_code == 0
+    config = build_default_config(tmp_path, assume_yes=True)
+    clean.clean(LogLevel.INFO, config)
 
     # Verify tmp_path removed correct directories and files
-    for d in clean.DIRS_TO_CLEAN:
+    for d in clean.DEFAULT_DIRS_TO_CLEAN:
         assert not tmp_path.joinpath(d).exists()
-    for f in clean.FILES_TO_CLEAN:
+    for f in clean.DEFAULT_FILES_TO_CLEAN:
         assert not tmp_path.joinpath(f).exists()
 
-    # Verfiy successive run doesn't break anything
-    result = runner.invoke(clean.main)
-    assert result.exit_code == 0
+    # Verify successive run doesn't break anything
+    clean.clean(LogLevel.INFO, config)
 
 
 @pytest.mark.parametrize(
@@ -183,21 +143,11 @@ def test_clean(runner: CliRunner, tmp_path: Path, args: tuple[str]) -> None:
         ("--log-level", "3RR0R"),
         ("log"),
         ("bad"),
-    ]
+    ],
 )
-def test_clean_bad_args(runner: CliRunner, tmp_path: Path, bad_args: tuple[str]) -> None:
-    """Test running `clean.py` with bad CLI arguments.
-
-    Args:
-        runner (CliRunner): Provides functionality to invoke a `click` command.
-        tmp_path (Path): Testing directory provided by `pytest`.
-        bad_args (tuple[str]): Tuple of invalid arguments.
-
-    """
-    # Verify tmp_path is not empty
-    assert verify_tmp_path(tmp_path)
-
-    result: Result = runner.invoke(clean.main, bad_args)
+def test_clean_bad_args(runner: CliRunner, bad_args: tuple[str]) -> None:
+    """Test running `clean.py` with bad CLI arguments."""
+    result: Result = runner.invoke(clean.main, [*bad_args, "--yes"])
     assert result.exit_code != 0
 
 
@@ -210,173 +160,117 @@ def test_clean_bad_args(runner: CliRunner, tmp_path: Path, bad_args: tuple[str])
 )
 # fmt: on
 def test_clean_does_not_exist(
-    runner: CliRunner,
     tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
     directories: list[str],
-    files: list[str]
+    files: list[str],
 ) -> None:
-    """Test `clean.py` when directory/file doesn't exist.
+    """Test `clean.py` when directory/file doesn't exist."""
+    config = build_config(tmp_path, directories, files)
+    clean.clean(LogLevel.DEBUG, config)
 
-    Args:
-        runner (CliRunner): Provides functionality to invoke a `click` command.
-        tmp_path (Path): Testing directory provided by `pytest`.
-        directories (list[str]): List of non-existant directory/ies.
-        files (list[str]): List of non-existant file/s.
-
-    """
-    # Verify tmp_path is not empty
-    assert verify_tmp_path(tmp_path)
-
-    clean.DIRS_TO_CLEAN, original_dirs = directories, clean.DIRS_TO_CLEAN.copy()
-    clean.FILES_TO_CLEAN, original_files = files, clean.FILES_TO_CLEAN.copy()
-
-    result: Result = runner.invoke(clean.main, ["-l", "debug"])
-    assert result.exit_code == 0
-
-    clean.DIRS_TO_CLEAN = original_dirs
-    clean.FILES_TO_CLEAN = original_files
-
-    assert len(directories) > 0
+    output = capsys.readouterr().out
     for d in directories:
-        assert f"{d}\" does not exist." in result.output
-    assert len(files) > 0
+        assert f"{d}\" does not exist." in output
     for f in files:
-        assert f"{f}\" does not exist." in result.output
+        assert f"{f}\" does not exist." in output
 
 
 # fmt: off
 @pytest.mark.parametrize(
     "directories, files",
     [
-        (clean.FILES_TO_CLEAN[:1], clean.DIRS_TO_CLEAN[:1]),
+        (list(clean.DEFAULT_FILES_TO_CLEAN[:1]), list(clean.DEFAULT_DIRS_TO_CLEAN[:1])),
     ]
 )
 # fmt: on
 def test_clean_swap_directory_with_file(
-    runner: CliRunner,
     tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
     directories: list[str],
-    files: list[str]
+    files: list[str],
 ) -> None:
-    """Test `clean.py` when directory swapped with file and vice versa.
-
-    Args:
-        runner (CliRunner): Provides functionality to invoke a `click` command.
-        tmp_path (Path): Testing directory provided by `pytest`.
-        directories (list[str]): List of "directory/ies" that are actually file/s.
-        files (list[str]): List of "file/s" that are actually directory/ies.
-
-    """
-    # Verify tmp_path is not empty
-    assert verify_tmp_path(tmp_path)
-
-    clean.DIRS_TO_CLEAN, original_dirs = directories, clean.DIRS_TO_CLEAN.copy()
-    clean.FILES_TO_CLEAN, original_files = files, clean.FILES_TO_CLEAN.copy()
-
-    result: Result = runner.invoke(clean.main, ["-l", "debug"])
-    assert result.exit_code == 0
-
-    clean.DIRS_TO_CLEAN = original_dirs
-    clean.FILES_TO_CLEAN = original_files
-
-    assert len(directories) > 0
+    """Test `clean.py` when directory swapped with file and vice versa."""
     for d in directories:
-        assert f"{d}\" exists but is not a directory." in result.output
-    assert len(files) > 0
+        tmp_path.joinpath(d).touch()
     for f in files:
-        assert f"{f}\" exists but is not a file." in result.output
+        tmp_path.joinpath(f).mkdir(parents=True)
+
+    config = build_config(tmp_path, directories, files)
+    clean.clean(LogLevel.DEBUG, config)
+
+    output = capsys.readouterr().out
+    for d in directories:
+        assert f"{d}\" exists but is not a directory." in output
+    for f in files:
+        assert f"{f}\" exists but is not a file." in output
 
 
-def test_clean_errors(runner: CliRunner, tmp_path: Path) -> None:
-    """Verify OSErrors are handled properly when running `clean.py`.
+def test_clean_errors(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify OSErrors are handled properly when running `clean.py`."""
+    populate_tmp_path(
+        tmp_path,
+        list(clean.DEFAULT_DIRS_TO_CLEAN),
+        list(clean.DEFAULT_FILES_TO_CLEAN),
+    )
 
-    Args:
-        runner (CliRunner): Provides functionality to invoke a `click` command.
-        tmp_path (Path): Testing directory provided by `pytest`.
-
-    """
-    # Verify tmp_path is not empty
-    assert verify_tmp_path(tmp_path)
-
-    # Create new file in a new directory
     new_dir: Path = tmp_path.joinpath("new_dir")
     new_dir.mkdir()
     new_file: Path = new_dir.joinpath("new_file")
     new_file.touch()
-    locked_dir: Path = tmp_path.joinpath(clean.DIRS_TO_CLEAN[0])
 
-    # Add new_file to FILES_TO_CLEAN so running clean.py will trigger an error both while
-    # attempting to delete the directory containing new_file and when attempting to
-    # delete new_file itself
-    original_dirs: list[str] = clean.DIRS_TO_CLEAN.copy()
-    original_files: list[str] = clean.FILES_TO_CLEAN.copy()
-    clean.FILES_TO_CLEAN.append(f"{new_file.parent.name}/{new_file.name}")
+    config = CleanConfig(
+        root_dir=tmp_path,
+        dirs_to_clean=[tmp_path.joinpath(d) for d in clean.DEFAULT_DIRS_TO_CLEAN]
+        + [new_dir],
+        files_to_clean=[tmp_path.joinpath(f) for f in clean.DEFAULT_FILES_TO_CLEAN]
+        + [new_file],
+        assume_yes=True,
+    )
 
-    new_file.chmod(0o200)
-    new_dir.chmod(0o555)
-    locked_dir.chmod(0o300)
-
-    # Run clean.py while new_file is open
-    result: Result | None = None
     if platform.system().lower().startswith("win"):
-        clean.DIRS_TO_CLEAN.append(new_dir.name)
         with new_file.open("r"):
-            result = runner.invoke(clean.main, ["-l", "debug"])
+            clean.clean(LogLevel.DEBUG, config)
     else:
-        result = runner.invoke(clean.main, ["-l", "debug"])
-    assert result.exit_code == 0
+        original_rmtree = clean.shutil.rmtree
+        original_unlink = Path.unlink
 
-    if new_dir.exists():
-        new_dir.chmod(0o755)
-    if new_file.exists():
-        new_file.chmod(0o644)
-    if locked_dir.exists():
-        locked_dir.chmod(0o755)
+        def guarded_rmtree(target: Path) -> None:
+            if target == new_dir:
+                raise OSError("simulated rmtree error")
+            original_rmtree(target)
 
+        def guarded_unlink(target: Path) -> None:
+            if target == new_file:
+                raise OSError("simulated unlink error")
+            original_unlink(target)
+
+        monkeypatch.setattr(clean.shutil, "rmtree", guarded_rmtree)
+        monkeypatch.setattr(Path, "unlink", guarded_unlink)
+        clean.clean(LogLevel.DEBUG, config)
+
+    output = capsys.readouterr().out
     expected_output: list[str] = [
         "Cleaning directory: ",
         "Error removing directory",
         "Error removing file",
         (
-            f"Cleaning complete: {len(clean.FILES_TO_CLEAN) - 1} files,"
-            f" {len(clean.DIRS_TO_CLEAN) - 1} directories removed."
+            f"Cleaning complete: {len(config.files_to_clean) - 1} files,"
+            f" {len(config.dirs_to_clean) - 1} directories removed."
         ),
     ]
 
-    clean.DIRS_TO_CLEAN = original_dirs
-    clean.FILES_TO_CLEAN = original_files
-
     matches: list[bool] = [False] * len(expected_output)
     i: int = 0
-    for line in result.output.split("\n"):
+    for line in output.split("\n"):
         if expected_output[i] in line:
             matches[i] = True
             i += 1
         if i >= len(expected_output):
             break
 
-    # If all elements of expected_output where found in result.output (in order), i
+    # If all elements of expected_output where found in output (in order), i
     # should equal length of expected_output
     assert matches.count(True) == len(expected_output)
-
-
-def verify_tmp_path(path: Path) -> bool:
-    """Verify `pytest`'s `tmp_path` contains correct directories and files.
-
-    Args:
-        path (Path): `pytest`'s `tmp_path` fixture.
-
-    Returns:
-        bool: Returns `True` if `tmp_path` contains all correct directories and files.
-              Returns `False` otherwise.
-
-    """
-    # Concatenate DIRS_TO_CLEAN and FILES_TO_CLEAN into one list of items:
-    #     clean.DIRS_TO_CLEAN + clean.FILES_TO_CLEAN
-    # Create sequence from this concatenated list where each element is True if each item
-    # exists at least in one location in `path`:
-    #     any(path.rglob(item)) for item in clean.DIRS_TO_CLEAN + clean.FILES_TO_CLEAN
-    # return True if any of this sequence's elements is True, otherwise False:
-    return any(
-        any(path.rglob(item)) for item in clean.DIRS_TO_CLEAN + clean.FILES_TO_CLEAN
-    )

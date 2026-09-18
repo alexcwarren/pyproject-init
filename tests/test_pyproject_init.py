@@ -3,72 +3,83 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
+from pyproject_init import pyproject_init
 from pyproject_init.pyproject_init import cli
 
 
 @pytest.fixture
 def runner() -> CliRunner:
-    """Fixture to provide a CliRunner instance.
-
-    Returns:
-        CliRunner: instance of CliRunner class.
-
-    """
+    """Fixture to provide a CliRunner instance."""
     return CliRunner()
 
 
-# TODO
-# test incorrect/missing command arguments
-# test that incorrect execution of command doesn't create new directory
-#
+def create_minimal_template(template_dir: Path) -> None:
+    """Create a minimal cookiecutter template."""
+    template_dir.mkdir(parents=True, exist_ok=True)
+    (template_dir / "cookiecutter.json").write_text(
+        '{\n  "project_name": "Example Project",\n'
+        "  \"project_slug\": \"{{ cookiecutter.project_name.lower().replace(' ', '-')"
+        ' }}"\n'
+        "}\n",
+        encoding="utf-8",
+    )
+    project_dir = template_dir / "{{cookiecutter.project_slug}}"
+    project_dir.mkdir()
+    (project_dir / "README.md").write_text("Test README\n", encoding="utf-8")
 
 
-# Test the 'new' command
-def test_new_command_creates_project(runner: CliRunner, tmp_path: Path) -> None:
-    """Test 'pyproject-init new'.
+def test_new_command_calls_cookiecutter(
+    runner: CliRunner, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that the 'new' command calls cookiecutter with expected args."""
+    templates_dir = tmp_path / "templates"
+    template_dir = templates_dir / "default"
+    create_minimal_template(template_dir)
+    monkeypatch.setattr(pyproject_init, "TEMPLATES_DIR", templates_dir)
 
-    Tests that the 'pyproject-init new' command successfully creates a project
-    in a temporary directory.
-    """
-    project_name = "test-new-project"
-    output_dir = tmp_path  # Use pytest's tmp_path fixture for a temporary directory
+    called: dict[str, object] = {}
 
-    # Create a dummy cookiecutter.json for the internal template for this test
-    # In a real scenario, we'd mock cookiecutter, but for integration, this works.
-    # We need to ensure the template exists for the test to run
-    # template_path = Path("src/pyproject_init/templates/default")
-    # template_path.mkdir(parents=True, exist_ok=True)
-    # (template_path / "cookiecutter.json").write_text("""
-    # {
-    #     "project_name": "test-project",
-    #     "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '-') }}",
-    #     "author_name": "Test Author",
-    #     "author_email": "test@example.com"
-    # }
-    # """)
-    # Also create the {{cookiecutter.project_slug}} directory inside the dummy template
-    # (template_path / "{{cookiecutter.project_slug}}").mkdir(exist_ok=True)
-    # (template_path / "{{cookiecutter.project_slug}}" / "dummy.txt").write_text(
-    #     "This is a dummy file."
-    # )
+    def fake_cookiecutter(
+        *, template: str, output_dir: str, no_input: bool, **kwargs: object
+    ) -> str:
+        called["template"] = template
+        called["output_dir"] = output_dir
+        called["no_input"] = no_input
+        called["extra_context"] = kwargs.get("extra_context")
+        return str(Path(output_dir) / "example-project")
 
-    # Run the CLI command
+    monkeypatch.setattr(pyproject_init, "cookiecutter", fake_cookiecutter)
+
+    output_dir = tmp_path / "out"
     result = runner.invoke(
-        cli, ["new", project_name, "--output-dir", str(output_dir), "--no-input"]
+        cli,
+        ["new", "Example Project", "--output-dir", str(output_dir), "--no-input"],
     )
 
-    # Assertions
     assert result.exit_code == 0
-    assert (
-        f"Project created successfully at: {output_dir / project_name}" in result.output
+    assert called["template"] == str(template_dir)
+    assert called["output_dir"] == str(output_dir)
+    assert called["no_input"] is True
+    assert called["extra_context"] == {"project_name": "Example Project"}
+    assert "Project created successfully" in result.output
+
+
+def test_new_command_creates_project_from_template(
+    runner: CliRunner, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Integration-ish test using a minimal temporary template."""
+    templates_dir = tmp_path / "templates"
+    template_dir = templates_dir / "default"
+    create_minimal_template(template_dir)
+    monkeypatch.setattr(pyproject_init, "TEMPLATES_DIR", templates_dir)
+
+    output_dir = tmp_path / "out"
+    result = runner.invoke(
+        cli,
+        ["new", "Example Project", "--output-dir", str(output_dir), "--no-input"],
     )
 
-    # Verify the project directory exists
-    generated_project_path = output_dir / project_name
-    assert generated_project_path.is_dir()
-
-    # Verify a file from the template exists within the generated project
-    assert (generated_project_path / "README.md").is_file()
-
-    # Clean up the dummy template files created for the test
-    # shutil.rmtree(template_path)
+    assert result.exit_code == 0
+    generated_project = output_dir / "example-project"
+    assert generated_project.is_dir()
+    assert (generated_project / "README.md").is_file()

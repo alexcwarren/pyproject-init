@@ -54,13 +54,13 @@ def new(
     # (2) What makes a template file "valid"? Must be JSON? Must be named
     #     "cookiecutter.json"? Must be formatted a certain way? Must include certain
     #     fields?
+    if not TEMPLATES_DIR.is_dir():
+        raise click.ClickException(f"Templates directory not found at {TEMPLATES_DIR}")
+
     template_path = TEMPLATES_DIR / template
 
     if not template_path.is_dir():
-        click.echo(
-            f"Error: Template '{template}' not found at {template_path}", err=True
-        )
-        return
+        raise click.ClickException(f"Template '{template}' not found at {template_path}")
 
     click.echo(f"Creating new project using template '{template}'...")
     click.echo(f"Output directory: {output_dir}")
@@ -85,11 +85,10 @@ def new(
         click.echo(
             "Navigate into your new project and follow its README for next steps."
         )
-    except Exception as e:
-        click.echo(f"An error occurred during project creation: {e}", err=True)
-        click.echo(
-            "Ensure you have valid template variables or try running without --no-input."
-        )
+    except Exception as exc:
+        raise click.ClickException(
+            "Project creation failed. Verify your template and try again."
+        ) from exc
         # You might want to remove the partially created directory if an error occurs
         # Be cautious with this, as it could delete unexpected files if output_dir
         # is wrong
