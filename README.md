@@ -2,100 +2,121 @@
 
 Create a Python project from the command line with a ready-to-use development setup.
 
-`pyproject-init` uses Click and Cookiecutter to generate projects with a `src/` package layout, Hatch/Hatchling configuration, Ruff, MyPy, pytest, pytest-randomly, and GitHub Actions configuration. The bundled default template includes starter code and a basic test so you can run the project's checks immediately.
+`pyproject-init` uses Click and Cookiecutter to generate projects with a `src/` package layout, Hatch/Hatchling configuration, Ruff, MyPy, pytest, pytest-randomly, and GitHub Actions configuration. The bundled default template includes starter code and a basic test.
+
+## Current migration state
+
+Development toward v0.2.0 is in progress. The generator repository now uses **uv** for its development environment, dependencies, and commands, with a committed `uv.lock`. Its packaging backend is still **Hatchling**, and its version still comes from `src/pyproject_init/__about__.py`.
+
+The generated default project still uses **Hatch** for development tasks and **Hatchling** for packaging. Moving the template and build backend to uv-based alternatives, modernizing Python requirements, and updating CI are separate migration steps; they are not complete at this checkpoint.
 
 ## Installation
 
-Requires Python 3.10 or newer. The project's CI covers Python 3.10, 3.11, and 3.12.
+The generator currently requires Python 3.10 or newer. Its Ruff and MyPy settings still target Python 3.10.
 
-Once the package is published on PyPI:
+### Work from a source checkout
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then run these commands from the repository root:
 
 ```console
-python -m pip install pyproject-init
+uv sync
+uv run pyproject-init --help
 ```
 
-For a source checkout, install from the repository root:
+Use `uv run pyproject-init ...` from this checkout for the examples below. You do not need to activate the environment manually.
+
+### Install without the development workflow
+
+To install the checked-out source into your chosen Python environment:
 
 ```console
 python -m pip install .
 ```
 
-Install Hatch to run the generated project's development commands:
+That installation exposes `pyproject-init` directly. If a release is published on PyPI, it can instead be installed with `python -m pip install pyproject-init`; a GitHub release alone does not imply PyPI availability.
+
+## Quick start
+
+From the generator repository, create a project interactively:
+
+```console
+uv run pyproject-init new
+```
+
+Or supply a name and an absolute parent output directory:
+
+```powershell
+uv run pyproject-init new my-cool-app --output-dir "C:\Users\YourUser\Documents\NewProjects"
+```
+
+Follow the prompts for metadata and Python version. For development and testing of the generator, create projects outside its checkout.
+
+The generated default project still needs Hatch. Install Hatch separately if necessary:
 
 ```console
 python -m pip install hatch
 ```
 
-## Quick start
+Enter the generated project's directory and run its checks:
 
-Create a project interactively in the current directory:
-
-```console
-pyproject-init new
-```
-
-Or supply a project name:
-
-```console
-pyproject-init new my-cool-app
-```
-
-Follow the prompts for project metadata and the Python version. After generation, enter the directory reported by the command:
-
-```console
-cd my-cool-app
+```powershell
+cd "C:\Users\YourUser\Documents\NewProjects\my-cool-app"
 hatch run all
 ```
 
-This runs the generated project's linting, type checking, and tests. Read its generated README for the application command and next steps.
+Read the generated README for its starter application command and next steps. Run `uv run ...` in the generator checkout and `hatch run ...` in the generated project at this stage of the migration.
 
 ## Usage
+
+For an installed CLI:
 
 ```text
 pyproject-init new [OPTIONS] [PROJECT_NAME]
 ```
 
+For the development checkout, prefix that command with `uv run`.
+
 | Option | Purpose |
 | --- | --- |
-| `-o, --output-dir DIRECTORY` | Parent directory in which to create the project. Use an absolute path when supplying this option. |
+| `-o, --output-dir DIRECTORY` | Parent directory in which to create the project. Supply an absolute path. |
 | `-t, --template TEXT` | Select a bundled template; `default` is the supported starting point. |
-| `--no-input` | Skip prompts and use template defaults, together with the supplied project name. |
+| `--no-input` | Skip prompts and use template defaults together with the supplied project name. |
 | `--help` | Display command help. |
 
 ### Choose an output directory
 
-Windows:
+Windows, from the generator checkout:
 
 ```powershell
-pyproject-init new my-cool-app --output-dir "C:\Users\YourUser\Documents\NewProjects"
+uv run pyproject-init new my-cool-app --output-dir "C:\Users\YourUser\Documents\NewProjects"
 ```
 
-macOS/Linux:
+macOS/Linux, from the generator checkout:
 
 ```console
-pyproject-init new my-cool-app --output-dir /absolute/path/to/projects
+uv run pyproject-init new my-cool-app --output-dir /absolute/path/to/projects
 ```
 
-The project is created beneath the output directory, for example `NewProjects/my-cool-app`.
+The project is created beneath that directory, for example `NewProjects/my-cool-app`.
 
 ### Use defaults without prompts
 
 ```console
-pyproject-init new my-cool-app --template default --no-input
+uv run pyproject-init new my-cool-app --template default --no-input
 ```
 
-Review the generated author information, description, and other metadata before publishing your project.
+Review generated author information, descriptions, and other metadata before publishing.
 
 ### Get help
 
 ```console
-pyproject-init --help
-pyproject-init new --help
+uv run pyproject-init --help
+uv run pyproject-init new --help
 ```
 
 ## Project names
 
-The project folder and distribution name can contain hyphens, while Python package names must be valid identifiers. For example:
+The folder and distribution name can contain hyphens; the Python package name must be a valid identifier:
 
 ```text
 my-cool-app/
@@ -114,10 +135,11 @@ The template calls these values `project_name` (`my-cool-app`) and `project_slug
 
 ## Current limitations
 
-- Explicit `--output-dir` values currently need to be absolute paths; relative-path support is planned.
-- Use a new destination. The CLI includes protection against creating a project at an existing destination.
-- The bundled `default` template is the established workflow. Broader custom-template support and additional template validation remain follow-up work.
+- Explicit `--output-dir` values need to be absolute paths; relative-path support remains follow-up work.
+- Use a new destination. The CLI protects against creating a project at an existing destination.
+- The bundled `default` template is the established workflow. Broader custom-template support and additional validation remain follow-up work.
+- The generator's uv environment does not migrate generated projects. Their Hatch commands remain applicable until the template migration is implemented and tested.
 
 ## Contributing
 
-For setup, architecture, template maintenance, checks, troubleshooting, and release preparation, see [README_DEV.md](README_DEV.md).
+See [README_DEV.md](README_DEV.md) for setup, checks, template maintenance, fresh-project acceptance tests, and the milestone/issue/branch/PR release workflow. v0.2.0 work integrates through the protected `release/v0.2.0` branch before its final PR into `main`.
