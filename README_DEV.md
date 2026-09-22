@@ -2,37 +2,41 @@
 
 `pyproject-init` renders a bundled Cookiecutter template into a new Python project.
 
-Development work needs to preserve two distinct things:
+Development work needs to preserve two separate but related things:
 
 1. the generator itself must install, test, build, and run correctly; and
 2. a fresh project produced by the bundled template must work without manual repair.
 
-These are related but separate verification targets.
+Both must be verified.
 
 ## Current v0.2.0 checkpoint
 
 | Concern | Current state |
 | --- | --- |
-| Generator environment and dependencies | uv, `.venv`, `[dependency-groups].dev`, and committed `uv.lock` |
+| Generator environment | uv-managed `.venv` |
 | Generator Python | Python 3.14 for development; Python 3.12 minimum supported |
-| Generator commands | `uv run ...` |
+| Generator dependencies | `[project].dependencies`, `[dependency-groups].dev`, committed `uv.lock` |
 | Generator build backend | `uv_build` |
-| Generator version | Static `[project].version` metadata |
-| Generator runtime dependencies | Click, Cookiecutter, and `jinja2-time` |
-| Generator development dependencies | MyPy, pytest, pytest-cov, pytest-randomly, Ruff |
-| Generated default project | Still Hatch/Hatchling-based at this checkpoint |
-| Release integration | Feature PRs into `release/v0.2.0`, followed by a final release PR into `main` |
+| Generator version | Static `[project].version` |
+| Generator commands | `uv run ...` |
+| Generated project environment | uv-managed `.venv` |
+| Generated project Python | User-selected 3.12, 3.13, or 3.14, pinned in `.python-version` |
+| Generated project build backend | `uv_build` |
+| Generated project version | Static `[project].version` |
+| Generated project tooling | pytest, pytest-cov, pytest-randomly, Ruff, MyPy |
+| Release integration | Feature PRs into `release/v0.2.0`, followed by final PR into `main` |
 | CI modernization | Still pending separate v0.2.0 work |
+| Local verification automation | Still pending separate v0.2.0 work |
 
-The generator no longer uses Hatch or Hatchling for its own development or packaging workflow.
+The generator and the default generated project now both use uv-based workflows.
 
-The generated default project still does. Do not confuse generator modernization with generated-template modernization.
+Hatch and Hatchling are no longer part of the normal generator or default-template toolchain.
 
-The planned generated-template migration, repository/template metadata improvements, expanded acceptance tests, CI migration, local verification automation, and final documentation pass remain separate v0.2.0 work.
+Remaining v0.2.0 work includes generated repository metadata improvements, stronger template acceptance tests, CI modernization, local verification automation, and final documentation cleanup.
 
 ## Start here after a break
 
-Before switching branches or pulling, inspect your current state:
+Before switching branches or pulling:
 
 ```console
 git status
@@ -40,7 +44,7 @@ git branch -vv
 git log --oneline --decorate -10
 ```
 
-Confirm the local toolchain:
+Verify the local toolchain:
 
 ```console
 uv --version
@@ -52,7 +56,9 @@ uv run pyproject-init new --help
 
 Run generator commands from the repository root.
 
-`uv sync` creates or updates `.venv` and installs the project plus its development dependencies. Manual environment activation is unnecessary.
+`uv sync` creates or updates `.venv` and installs the generator plus its development dependencies.
+
+Manual virtual-environment activation is unnecessary.
 
 Keep these files in version control:
 
@@ -74,16 +80,16 @@ temporary smoke-test projects
 
 ## Python setup
 
-The generator currently:
+The generator:
 
 - supports Python 3.12 and newer;
-- uses Python 3.14 as its normal development interpreter;
-- records the development interpreter in `.python-version`;
-- configures Ruff and MyPy against the minimum supported Python version.
+- normally develops on Python 3.14;
+- pins its development interpreter in `.python-version`;
+- configures Ruff and MyPy against the minimum supported version.
 
-Install uv using the standalone installer.
+Install uv using its standalone installer.
 
-Then install and pin Python:
+Then:
 
 ```console
 uv python install 3.14
@@ -101,7 +107,7 @@ The expected major/minor version is Python 3.14.
 
 ### Changing Python versions
 
-Use uv rather than manually managing the virtual environment:
+Use uv:
 
 ```console
 uv python install <version>
@@ -115,32 +121,32 @@ If the interpreter changes, uv may recreate `.venv`. The virtual environment is 
 
 ### Windows and pyenv-win
 
-Avoid using both uv and `pyenv-win` as active version managers for the same repository.
+Avoid using both uv and `pyenv-win` as active Python-version managers for the same repository.
 
 Both recognize `.python-version`, and `pyenv-win` can intercept commands through its shim directory.
 
-Check which uv executable PowerShell resolves:
+Check what PowerShell resolves:
 
 ```powershell
 where.exe uv
 Get-Command uv -All
 ```
 
-The preferred result should begin with a standalone uv installation such as:
+The preferred first result is a standalone uv installation such as:
 
 ```text
 C:\Users\<user>\.local\bin\uv.exe
 ```
 
-If `pyenv-win` is retained for older repositories, its `bin` directory may remain available so `pyenv` itself can still be run deliberately.
+If `pyenv-win` remains installed for older repositories, its `bin` directory may remain available so the `pyenv` command can still be invoked deliberately.
 
-Its shim directory should not intercept this project's commands:
+Its shim directory should not intercept this project:
 
 ```text
 C:\Users\<user>\.pyenv\pyenv-win\shims
 ```
 
-Check both User and System PATH variables if pyenv unexpectedly handles uv or Python commands.
+If pyenv unexpectedly handles uv or Python commands, inspect both User and System PATH values.
 
 ## Dependency model
 
@@ -162,7 +168,7 @@ dev = [
 ]
 ```
 
-A dependency is runtime if the installed package needs it to perform normal user-facing behavior.
+A dependency is runtime if an installed user needs it for normal application behavior.
 
 For example, the bundled Cookiecutter template declares:
 
@@ -170,11 +176,17 @@ For example, the bundled Cookiecutter template declares:
 "_extensions": ["jinja2_time.TimeExtension"]
 ```
 
-Therefore `jinja2-time` is a runtime dependency of `pyproject-init`, not merely a development dependency.
+Therefore `jinja2-time` is a runtime dependency of `pyproject-init`.
 
-This matters because development environments can hide dependency mistakes: `uv sync` installs development dependencies, while an end user installing a built wheel receives only declared runtime dependencies.
+This distinction matters because:
 
-Use uv to modify dependencies:
+```text
+uv sync
+```
+
+installs development dependencies, while a user installing a built wheel receives only declared runtime dependencies.
+
+Use uv to manage dependencies:
 
 ```console
 uv add <package>
@@ -195,23 +207,17 @@ Verify the committed lockfile without modifying it:
 uv lock --check
 ```
 
-For synchronization that must fail instead of updating a stale lockfile:
+Use:
 
 ```console
 uv sync --locked
 ```
 
+when synchronization should fail instead of changing a stale lockfile.
+
 Do not hand-edit `uv.lock`.
 
-## Architecture and repository map
-
-Click parses CLI commands and options.
-
-Cookiecutter renders projects from bundled templates.
-
-uv manages the generator's Python installation, environment, dependencies, lockfile, command execution, and package build frontend.
-
-`uv_build` builds the generator package.
+## Repository architecture
 
 ```text
 .python-version
@@ -225,12 +231,12 @@ src/pyproject_init/
         default/
             cookiecutter.json
             {{cookiecutter.project_name}}/
+                .gitignore
+                .python-version
                 README.md
                 pyproject.toml
-                pytest.ini
                 src/
                     {{cookiecutter.project_slug}}/
-                        __about__.py
                         __init__.py
                         main.py
                 tests/
@@ -247,20 +253,26 @@ tests/
     ci.yml
 ```
 
-The generator no longer stores its own version in `src/pyproject_init/__about__.py`.
+Click handles CLI commands and options.
 
-Its version now comes directly from:
+Cookiecutter renders projects from bundled templates.
+
+uv manages Python versions, virtual environments, dependencies, locking, command execution, and build invocation.
+
+`uv_build` builds both the generator and the default generated project.
+
+The generator version comes from:
 
 ```toml
 [project]
 version = "..."
 ```
 
-The generated template still contains its own `__about__.py` because the template has not yet been migrated away from its existing Hatch/Hatchling versioning model.
+The default generated project also uses static `[project].version`.
 
 ## Python compatibility policy
 
-The generator currently declares:
+The generator declares:
 
 ```toml
 requires-python = ">=3.12"
@@ -282,11 +294,11 @@ target-version = "py312"
 python_version = "3.12"
 ```
 
-This allows development on a modern interpreter while avoiding accidental syntax or assumptions that break Python 3.12 support.
+This lets development use a recent interpreter while avoiding accidental syntax incompatible with Python 3.12.
 
 The generator currently advertises CPython 3.12, 3.13, and 3.14 support.
 
-Do not advertise additional implementations unless they are deliberately supported and tested.
+Do not advertise alternate implementations unless they are intentionally supported and tested.
 
 ## Generator checks
 
@@ -314,9 +326,9 @@ Review the diff afterward.
 
 There is currently no single aggregate verification command.
 
-A later v0.2.0 tooling/CI issue should provide one routine local entry point and make CI execute the same logical verification.
+A later v0.2.0 tooling/CI issue should provide one routine local entry point and make CI execute the same logical checks.
 
-## Building the package
+## Building the generator
 
 Build both source and wheel distributions with:
 
@@ -324,31 +336,31 @@ Build both source and wheel distributions with:
 uv build
 ```
 
-Expected output is written to:
+Artifacts are written to:
 
 ```text
 dist/
 ```
 
-and should contain both:
+and should include:
 
 ```text
 *.tar.gz
 *.whl
 ```
 
-At this checkpoint, uv is the build frontend and `uv_build` is the configured build backend.
+The generator uses `uv_build`.
 
-The generator's package version comes from:
+Its version comes from:
 
 ```toml
 [project]
 version = "..."
 ```
 
-Do not bump the package to a planned release version simply because development is occurring on a release branch.
+Do not bump the package to the planned release version merely because development is occurring on `release/v0.2.0`.
 
-The release version should be changed deliberately as part of release preparation.
+Change the version deliberately during release preparation.
 
 ## Why editable testing is not enough
 
@@ -361,31 +373,32 @@ uv run pyproject-init ...
 
 tests an editable installation backed by the source checkout.
 
-That does not prove that a published wheel contains all required files or dependencies.
+That does not prove that a release wheel contains:
 
-A packaging regression can therefore pass every ordinary development test while still producing a broken release.
+- all required runtime dependencies;
+- bundled templates;
+- working entry-point metadata;
+- all package data.
 
-For `pyproject-init`, this is especially important because the package must ship its entire Cookiecutter template tree.
-
-Release-quality verification must therefore test the built package itself.
+Release-quality verification must therefore test the built artifact itself.
 
 ## Inspect built artifacts
 
 ### Wheel
 
-On Windows, use the uv-managed Python interpreter:
+On Windows:
 
 ```powershell
 uv run python -m zipfile -l `
     .\dist\pyproject_init-0.1.0-py3-none-any.whl
 ```
 
-Do not assume a global `python` command exists.
-
-Confirm that the wheel includes the bundled template tree, especially files such as:
+Confirm that the bundled template exists, including files such as:
 
 ```text
 pyproject_init/templates/default/cookiecutter.json
+pyproject_init/templates/default/{{cookiecutter.project_name}}/.gitignore
+pyproject_init/templates/default/{{cookiecutter.project_name}}/.python-version
 pyproject_init/templates/default/{{cookiecutter.project_name}}/README.md
 pyproject_init/templates/default/{{cookiecutter.project_name}}/pyproject.toml
 pyproject_init/templates/default/{{cookiecutter.project_name}}/src/...
@@ -400,64 +413,51 @@ Inspect the sdist:
 tar -tf .\dist\pyproject_init-0.1.0.tar.gz
 ```
 
-Confirm that the corresponding template files exist beneath:
+Confirm corresponding files beneath:
 
 ```text
 src/pyproject_init/templates/
 ```
 
-When the version changes, substitute the actual artifact filename rather than assuming `0.1.0`.
+Use the actual artifact filename when the project version changes.
 
 ## Clean-wheel smoke test
 
-This test approximates what an actual user receives.
+This verifies what a user actually receives.
 
-It deliberately:
+The workflow:
 
-1. creates an isolated temporary environment;
+1. creates a clean temporary environment;
 2. installs the built wheel rather than the source checkout;
 3. leaves the repository directory;
-4. runs the installed CLI;
-5. renders a project using the bundled template.
+4. invokes the installed CLI;
+5. renders a project from the packaged template.
 
-### Why this matters
-
-This test catches problems such as:
+This can catch:
 
 - missing package data;
 - missing runtime dependencies;
 - broken console entry points;
-- template lookup that only works from a source checkout;
+- template lookup that only works from the source checkout;
 - packaging configuration errors.
-
-During the v0.2.0 packaging migration, this test exposed that `jinja2-time` was incorrectly classified as a development dependency even though the bundled template requires it at runtime.
 
 ### PowerShell procedure
 
-From the generator repository:
+Create a disposable directory:
 
 ```powershell
 $testDir = Join-Path $env:TEMP "pyproject-init-wheel-test"
 
-Remove-Item -Recurse -Force $testDir -ErrorAction SilentlyContinue
+Remove-Item `
+    -Recurse `
+    -Force `
+    $testDir `
+    -ErrorAction SilentlyContinue
 
 New-Item `
     -ItemType Directory `
     -Path $testDir |
     Out-Null
-```
-
-PowerShell equivalents:
-
-```text
-Join-Path                              build a filesystem path safely
-Remove-Item -Recurse -Force            roughly rm -rf
-New-Item -ItemType Directory           roughly mkdir
-Push-Location                          roughly pushd
-Pop-Location                           roughly popd
-Get-ChildItem                          roughly ls
-Select-String                          roughly grep
-& <path>                               execute the command at that path
 ```
 
 Create a clean environment:
@@ -466,7 +466,7 @@ Create a clean environment:
 uv venv "$testDir\.venv" --python 3.14
 ```
 
-Install the built wheel into that environment:
+Install the wheel:
 
 ```powershell
 uv pip install `
@@ -496,107 +496,300 @@ Generate a project:
     --no-input
 ```
 
-Confirm output exists:
+Inspect the result:
 
 ```powershell
-Get-ChildItem "$testDir\wheel-smoke"
+Get-ChildItem "$testDir\wheel-smoke" -Force
 ```
 
-Return to the original directory:
+Return:
 
 ```powershell
 Pop-Location
 ```
 
-The generated project should contain at least:
+A later tooling issue should automate this workflow in a cross-platform Python script.
+
+## PowerShell command equivalents
+
+Some development examples use PowerShell-specific commands.
+
+Useful comparisons:
 
 ```text
+PowerShell                             Unix-style equivalent
+-----------                            ---------------------
+Get-ChildItem                         ls
+Remove-Item                           rm
+Remove-Item -Recurse -Force           rm -rf
+New-Item -ItemType Directory          mkdir
+Select-String                         grep
+Push-Location                         pushd
+Pop-Location                          popd
+Join-Path                             build/join filesystem path
+& <path>                              execute file at path
+`                                      shell line continuation
+```
+
+Prefer project automation in Python when practical so workflows remain cross-platform.
+
+## Default generated project
+
+The default template now produces a uv-native Python project.
+
+Generated projects contain:
+
+```text
+.gitignore
+.python-version
 README.md
 pyproject.toml
-pytest.ini
 src/
 tests/
 ```
 
-A later tooling issue should automate this workflow in a cross-platform Python script rather than requiring developers to reproduce the entire PowerShell sequence manually.
+They do not require Hatch or pyenv.
 
-## Template maintenance
+### Python selection
 
-The generated template remains a separate project configuration.
+Cookiecutter currently offers:
 
-At this checkpoint it still uses Hatch/Hatchling.
-
-| Template value | Example | Used for |
-| --- | --- | --- |
-| `project_name` | `test-project` | Project folder, distribution name, user-facing command, repository metadata |
-| `project_slug` | `test_project` | Python package/import name |
-
-The current template contains version configuration such as:
-
-```toml
-dynamic = ["version"]
-
-[tool.hatch.version]
-path = "src/{{ cookiecutter.project_slug }}/__about__.py"
+```text
+3.12
+3.13
+3.14
 ```
 
-Do not remove this merely because the generator itself migrated to static version metadata.
+The selected version is written to:
 
-The generated template will be migrated in its dedicated v0.2.0 issue.
+```text
+.python-version
+```
 
-When changing template files:
+and used for:
 
-1. update template configuration;
-2. update affected paths and contents together;
-3. run generator checks;
-4. generate a fresh project outside the repository;
-5. test that generated project;
-6. fix the template itself rather than repairing generated output manually.
+```toml
+requires-python = ">={{ cookiecutter.python_version }}"
+```
 
-## Fresh-project acceptance testing
+Ruff and MyPy target the selected minimum version.
 
-The current generated template still uses Hatch.
+### Generated dependencies
 
-Until its migration lands, generated-project checks remain separate from the generator's uv workflow.
+Development dependencies are declared in:
 
-Generate a fresh project outside the checkout:
+```toml
+[dependency-groups]
+dev = [
+  "mypy",
+  "pytest",
+  "pytest-cov",
+  "pytest-randomly",
+  "ruff",
+]
+```
+
+Generated projects receive their own `uv.lock` after running:
+
+```console
+uv sync
+```
+
+### Generated console application
+
+The template defines:
+
+```toml
+[project.scripts]
+{{ cookiecutter.project_name }} = "{{ cookiecutter.project_slug }}.main:main"
+```
+
+The generated `main.py` defines both:
+
+```python
+hello_world()
+main()
+```
+
+The console entry point must be tested directly because pytest alone does not prove entry-point metadata is correct.
+
+## Generated-project acceptance test
+
+Changes affecting the template must be tested by generating a completely fresh project.
+
+Do not repair an already-generated project and treat that as proof the template works.
+
+### Create a fresh project
+
+From the generator repository:
 
 ```powershell
-$generatorRoot = (Get-Location).Path
+$testRoot = Join-Path $env:TEMP "pyproject-init-template-test"
 
-$smokeOutput = Join-Path `
-    (Split-Path -Parent $generatorRoot) `
-    "pyproject-init-test-output"
+Remove-Item `
+    -Recurse `
+    -Force `
+    $testRoot `
+    -ErrorAction SilentlyContinue
 
 New-Item `
     -ItemType Directory `
-    -Force `
-    -Path $smokeOutput |
+    -Path $testRoot |
     Out-Null
 
-$smokeName = "release-smoke-" + `
-    (Get-Date -Format "yyyyMMdd-HHmmss")
-
 uv run pyproject-init new `
-    $smokeName `
-    --output-dir $smokeOutput `
+    uv-template-smoke `
+    --output-dir $testRoot `
     --template default `
     --no-input
 ```
 
-A second invocation using the same destination should reject the existing project without overwriting it.
+Inspect generated files:
 
-Then enter the generated project and follow its current README.
+```powershell
+Get-ChildItem "$testRoot\uv-template-smoke" -Force
+```
 
-Until the template migration lands, its development workflow remains Hatch-based.
+Expected top-level files include:
+
+```text
+.gitignore
+.python-version
+README.md
+pyproject.toml
+src/
+tests/
+```
+
+### Verify the generated project
+
+Enter it:
+
+```powershell
+Push-Location "$testRoot\uv-template-smoke"
+```
+
+Then run:
+
+```console
+uv sync
+uv run python --version
+uv run uv-template-smoke
+uv run pytest
+uv run ruff check src tests
+uv run ruff format src tests --check
+uv run mypy src tests
+uv build
+```
+
+Expected console output includes:
+
+```text
+Hello, World!
+```
+
+Return to the generator repository:
+
+```powershell
+Pop-Location
+```
+
+All generated-project checks should pass before template changes are accepted.
+
+## Why the acceptance test checks multiple things
+
+Different commands catch different failures.
+
+For example:
+
+```text
+pytest
+```
+
+can pass even when the generated console entry point is broken.
+
+Similarly:
+
+```text
+ruff check
+```
+
+can pass while:
+
+```text
+ruff format --check
+```
+
+fails.
+
+The acceptance workflow therefore checks:
+
+- environment creation;
+- Python selection;
+- installed console command;
+- tests;
+- linting;
+- formatting;
+- typing;
+- package build.
+
+Do not treat one successful check as evidence that all generated-project behavior works.
+
+## Template maintenance
+
+The key template values are:
+
+| Value | Example | Used for |
+| --- | --- | --- |
+| `project_name` | `test-project` | Folder name, distribution name, console command, repository metadata |
+| `project_slug` | `test_project` | Python package/import name |
+| `python_version` | `3.12` | Minimum Python, `.python-version`, Ruff target, MyPy target |
+
+When changing the template:
+
+1. modify the template source;
+2. update related paths and configuration together;
+3. generate a fresh project outside the checkout;
+4. run the full generated-project acceptance workflow;
+5. fix the template itself;
+6. regenerate and retest.
+
+Do not rely on manually repairing generated output.
+
+## Generated `.gitignore`
+
+The default template excludes common disposable files including:
+
+```text
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+```
+
+Keep generated repository defaults conservative and conventional.
+
+Broader repository metadata belongs in the dedicated template/repository-files work.
 
 ## Troubleshooting
 
-### Plain `python` is not found on Windows
+### Plain `python` is unavailable on Windows
 
-A global Python executable is not required for this repository.
+A global Python command is not required.
 
-Prefer:
+Use:
 
 ```console
 uv run python ...
@@ -608,9 +801,7 @@ or:
 uv python ...
 ```
 
-rather than relying on a global `python` command.
-
-### uv unexpectedly invokes pyenv-win
+### uv invokes pyenv unexpectedly
 
 Inspect:
 
@@ -619,17 +810,15 @@ where.exe uv
 Get-Command uv -All
 ```
 
-Standalone uv should resolve before any pyenv shim.
-
 Check both User and System PATH values for:
 
 ```text
 .pyenv\pyenv-win\shims
 ```
 
-### Wrong interpreter selected
+### Wrong Python version
 
-Check:
+Generator:
 
 ```powershell
 Get-Content .python-version
@@ -637,46 +826,63 @@ uv python find 3.14
 uv run python --version
 ```
 
-Restore the development interpreter with:
+Generated project:
 
-```console
-uv python install 3.14
-uv python pin 3.14
-uv sync
+```powershell
+Get-Content .python-version
+uv run python --version
 ```
 
 ### Stale `.venv`
 
-The project environment is disposable.
-
-Recreate it if necessary:
+Remove and recreate it:
 
 ```powershell
 Remove-Item -Recurse -Force .venv
 uv sync
 ```
 
-### CLI works from source but installed wheel fails
+### Generator works but built wheel fails
 
-Do not assume the build is valid.
-
-Check:
+Inspect:
 
 - runtime dependencies;
 - wheel contents;
 - template package data;
-- entry-point metadata;
-- clean-wheel installation.
+- entry-point metadata.
 
-Repeat the clean-wheel smoke test.
+Then rerun the clean-wheel smoke test.
 
-### Generated project fails but generator tests pass
+### Generated tests pass but the command fails
 
-Generator checks intentionally exclude the raw template directory.
+Run the generated console command directly:
 
-Generate and test a fresh project outside the checkout.
+```console
+uv run <project-name>
+```
 
-The template and generator require separate validation.
+Check:
+
+```toml
+[project.scripts]
+```
+
+against the actual function defined in the target module.
+
+### Ruff lint passes but formatting fails
+
+These are different checks:
+
+```console
+uv run ruff check src tests
+uv run ruff format src tests --check
+```
+
+Fix formatting with:
+
+```console
+uv run ruff format src tests
+```
 
 ## Release workflow
 
@@ -706,14 +912,16 @@ For this release:
 v0.2.0
 ```
 
-Assign intended issues to it and keep unrelated work outside release scope.
+Assign intended issues to it.
 
-Each issue should describe:
+Keep unrelated work outside release scope.
+
+Each issue should identify:
 
 - intended behavior;
 - affected areas;
 - acceptance criteria;
-- dependencies on other work.
+- meaningful dependencies.
 
 ### 2. Create the release branch
 
@@ -744,13 +952,13 @@ Do not commit ordinary implementation changes directly to release branches.
 
 Release branches remain deletable because they are temporary.
 
-Required CI status checks should be enabled only after the modernized CI workflow actually runs for release-targeted PRs.
+Required CI checks should be enabled only after the modernized CI workflow actually runs for release-targeted PRs.
 
 ### 4. Create issue branches
 
 Prefer GitHub's Issue **Create a branch** action.
 
-During this release, ensure the branch source is:
+During this release, the source must be:
 
 ```text
 release/v0.2.0
@@ -773,7 +981,7 @@ release/v<semver>
 
 ### 5. Implement and verify
 
-Keep branches focused.
+Keep each branch focused.
 
 Before committing:
 
@@ -782,9 +990,7 @@ git status
 git diff
 ```
 
-Run relevant checks.
-
-For ordinary generator changes:
+For generator changes:
 
 ```console
 uv lock --check
@@ -796,17 +1002,17 @@ uv run pyproject-init --help
 uv run pyproject-init new --help
 ```
 
-For packaging changes, additionally:
+For packaging changes:
 
 ```console
 uv build
 ```
 
-and perform clean-artifact verification.
+For template changes, run the full generated-project acceptance test.
 
-A future tooling issue should replace repetitive manual invocation with one local verification command plus a dedicated packaging smoke-test command.
+A future tooling issue should replace repetitive command sequences with reusable local verification commands.
 
-CI should use those same logical checks.
+CI should execute the same logical checks.
 
 ### 6. Commit intentionally
 
@@ -840,7 +1046,7 @@ Document:
 - what changed;
 - what intentionally did not change;
 - checks performed;
-- packaging tests if relevant;
+- generated-project acceptance results where relevant;
 - associated issue.
 
 Merge through the PR.
@@ -855,7 +1061,7 @@ git pull --ff-only
 git branch -d <merged-feature-branch>
 ```
 
-Start the next feature branch from the updated release branch.
+Start the next issue branch from the updated release branch.
 
 ### 9. Regression-test the integrated release
 
@@ -863,40 +1069,41 @@ Before the final release PR:
 
 1. run generator verification;
 2. run coverage;
-3. exercise project generation;
-4. test duplicate-destination handling;
-5. test fresh generated projects;
-6. verify Python compatibility;
-7. verify CI triggers and required checks;
-8. review milestone completion;
-9. review documentation;
-10. build release artifacts;
-11. run clean-wheel verification.
+3. generate fresh projects;
+4. test generated console commands;
+5. test duplicate-destination handling;
+6. test generated lint, format, typing, tests, and builds;
+7. verify Python compatibility;
+8. verify CI triggers and required checks;
+9. review milestone completion;
+10. review documentation;
+11. build release artifacts;
+12. run clean-wheel verification.
 
-Fix regressions on dedicated branches, never directly on the release branch.
+Fix regressions through dedicated branches rather than directly on the release branch.
 
 ### 10. Prepare the release version
 
-The generator version is now stored directly in:
+The generator version is stored in:
 
 ```toml
 [project]
 version = "..."
 ```
 
-Update it deliberately through the normal review process when preparing the actual release.
+Update it deliberately during release preparation.
 
 Do not use the release branch name as the version source.
 
 ### 11. Build release artifacts
 
-Build:
+Run:
 
 ```console
 uv build
 ```
 
-Inspect both:
+Inspect:
 
 ```text
 dist/*.whl
@@ -907,7 +1114,7 @@ Verify bundled templates exist in both distributions.
 
 Install the exact wheel into a clean environment and generate a project from it.
 
-Do not rely on an editable installation as proof that the release artifact works.
+Do not rely on editable installation alone.
 
 ### 12. Open the final release PR
 
@@ -926,8 +1133,6 @@ Summarize:
 - packaging verification;
 - known limitations;
 - deferred work.
-
-Merge only after required review and checks.
 
 ### 13. Tag the validated release
 
@@ -965,7 +1170,7 @@ Include:
 - known limitations;
 - intended release artifacts.
 
-Publishing a GitHub Release does not automatically imply PyPI publication.
+A GitHub Release does not inherently publish the package to PyPI.
 
 ### 15. Clean up
 

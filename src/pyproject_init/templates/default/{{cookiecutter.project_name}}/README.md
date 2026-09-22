@@ -2,86 +2,133 @@
 
 {{ cookiecutter.project_short_description }}
 
-## Getting Started
+## Getting started
 
 ### Prerequisites
 
-* Python {{ cookiecutter.python_version }} or later (recommended to use `pyenv` or similar for managing Python versions).
-* [`Hatch`](https://hatch.pypa.io/latest/) for project management. Install it globally:
+Install [uv](https://docs.astral.sh/uv/) using its standalone installer.
 
-    ```shell
-    pip install hatch
-    ```
+This project requires Python {{ cookiecutter.python_version }} or newer and pins its normal development interpreter in `.python-version`.
 
-### Installation
+uv can install the required Python version automatically when needed.
 
-1. **Clone the repository:**
+### Set up the project
 
-    ```shell
-    git clone [https://github.com/](https://github.com/){{ cookiecutter.user_name }}/{{ cookiecutter.project_slug }}.git
-    cd {{ cookiecutter.project_slug }}
-    ```
-
-1. **Set up Hatch environment:**
-
-    ```shell
-    hatch env create
-    ```
-
-    This command will create a virtual environment (`.venv`) and install all project dependencies.
-
-### Running the Project
-
-You can run the main function using Hatch:
+After cloning the repository:
 
 ```shell
-hatch run python src/{{ cookiecutter.project_slug }}/main.py
+git clone https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_slug }}.git
+cd {{ cookiecutter.project_slug }}
+uv sync
 ```
 
-This should print "Hello, World!".
+`uv sync` creates the project virtual environment and installs the project plus its development dependencies.
+
+Manual virtual-environment activation is not required.
+
+## Running the project
+
+Run the generated console command with:
+
+```shell
+uv run {{ cookiecutter.project_name }}
+```
+
+You can also run the module directly:
+
+```shell
+uv run python -m {{ cookiecutter.project_slug }}.main
+```
+
+The starter application prints:
+
+```text
+Hello, World!
+```
 
 ## Development
 
-### Running Tests
-
-To run tests for this project:
+### Run tests
 
 ```shell
-hatch run test
+uv run pytest
 ```
 
-To run tests with coverage:
+### Run tests with coverage
 
 ```shell
-hatch run cov
+uv run pytest --cov={{ cookiecutter.project_slug }} --cov-report=term-missing
 ```
 
-### Linting and Formatting
-
-To check for linting issues and formatting problems:
+### Lint
 
 ```shell
-hatch run lint
+uv run ruff check src tests
 ```
 
-To automatically format the code:
+### Check formatting
 
 ```shell
-hatch run format
+uv run ruff format src tests --check
 ```
 
-### Type Checking
-
-To run static type checks using MyPy:
+### Format code
 
 ```shell
-hatch run typecheck
+uv run ruff format src tests
 ```
 
-### Running All Checks
-
-To run all checks (lint, typecheck, test):
+### Type check
 
 ```shell
-hatch run all
+uv run mypy src tests
+```
+
+## Run the routine checks
+
+Until a project-specific aggregate verification command is added, run:
+
+```shell
+uv run ruff check src tests
+uv run ruff format src tests --check
+uv run mypy src tests
+uv run pytest
+```
+
+## Dependency management
+
+Add a runtime dependency:
+
+```shell
+uv add <package>
+```
+
+Add a development dependency:
+
+```shell
+uv add --dev <package>
+```
+
+Remove a dependency:
+
+```shell
+uv remove <package>
+```
+
+Keep `pyproject.toml` and `uv.lock` together in version control.
+
+Do not commit `.venv`.
+
+## Build the package
+
+Build the source distribution and wheel with:
+
+```shell
+uv build
+```
+
+Artifacts are written to:
+
+```text
+dist/
 ```
