@@ -9,6 +9,36 @@ import tempfile
 from pathlib import Path
 
 PROJECT_NAME = "wheel-smoke"
+PROJECT_SLUG = "wheel_smoke"
+
+CHECK_DIRECTORIES: tuple[str, ...] = ("src", "tests")
+
+GENERATED_CHECKS = (
+    ("Synchronize generated project", ("uv", "sync", "--no-active")),
+    ("Run generated CLI", ("uv", "run", "--no-active", PROJECT_NAME)),
+    ("Run tests", ("uv", "run", "--no-active", "pytest")),
+    (
+        "Run Ruff lint",
+        ("uv", "run", "--no-active", "ruff", "check", *CHECK_DIRECTORIES),
+    ),
+    (
+        "Run Ruff format check",
+        (
+            "uv",
+            "run",
+            "--no-active",
+            "ruff",
+            "format",
+            *CHECK_DIRECTORIES,
+            "--check",
+        ),
+    ),
+    (
+        "Run MyPy",
+        ("uv", "run", "--no-active", "mypy", *CHECK_DIRECTORIES),
+    ),
+    ("Build generated project", ("uv", "build")),
+)
 
 
 def write(message: str = "") -> None:
@@ -163,6 +193,44 @@ def main() -> int:
 
             write()
             write("Packaged template generated the expected project structure.")
+
+            package_dir = generated_project / "src" / PROJECT_SLUG
+
+            if not package_dir.is_dir():
+                raise RuntimeError(
+                    f"Generated package directory not found: {package_dir}"
+                )
+
+            main_file = package_dir / "main.py"
+
+            if not main_file.is_file():
+                raise RuntimeError(f"Generated main module not found: {main_file}")
+
+            for name, command in GENERATED_CHECKS:
+                write()
+                write(f"==> {name}")
+                run(command, cwd=generated_project)
+
+            generated_dist = generated_project / "dist"
+
+            if not generated_dist.is_dir():
+                raise RuntimeError("Packaged template project did not produce dist/.")
+
+            wheel_files = list(generated_dist.glob("*.whl"))
+            sdist_files = list(generated_dist.glob("*.tar.gz"))
+
+            if not wheel_files:
+                raise RuntimeError("Packaged template project did not produce a wheel.")
+
+            if not sdist_files:
+                raise RuntimeError(
+                    "Packaged template project did not produce a source distribution."
+                )
+
+            write()
+            write("Packaged template project produced:")
+            for artifact in sorted(wheel_files + sdist_files):
+                write(f"  - {artifact.name}")
 
     except (subprocess.CalledProcessError, RuntimeError) as exc:
         sys.stderr.write(f"\nPackage smoke test failed: {exc}\n")
