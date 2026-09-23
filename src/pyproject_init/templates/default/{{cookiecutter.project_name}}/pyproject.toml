@@ -3,13 +3,13 @@ requires = ["uv_build>=0.12.17,<0.13"]
 build-backend = "uv_build"
 
 [project]
-name = "{{ cookiecutter.project_slug }}"
+name = "{{ cookiecutter.project_name }}"
 version = "0.1.0"
 description = "{{ cookiecutter.project_short_description }}"
 readme = "README.md"
 requires-python = ">={{ cookiecutter.python_version }}"
 license = "MIT"
-keywords = []
+license-files = ["LICENSE"]
 authors = [
   { name = "{{ cookiecutter.author_name }}", email = "{{ cookiecutter.author_email }}" },
 ]
@@ -28,9 +28,9 @@ dependencies = [
 {{ cookiecutter.project_name }} = "{{ cookiecutter.project_slug }}.main:main"
 
 [project.urls]
-Documentation = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_slug }}#readme"
-Issues = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_slug }}/issues"
-Source = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_slug }}"
+Documentation = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_name }}#readme"
+Issues = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_name }}/issues"
+Source = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_name }}"
 
 [dependency-groups]
 dev = [
