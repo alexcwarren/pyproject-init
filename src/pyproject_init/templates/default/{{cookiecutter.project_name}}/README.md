@@ -17,8 +17,8 @@ uv can install the required Python version automatically when needed.
 After cloning the repository:
 
 ```shell
-git clone https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_slug }}.git
-cd {{ cookiecutter.project_slug }}
+git clone https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_name }}.git
+cd {{ cookiecutter.project_name }}
 uv sync
 ```
 
