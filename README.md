@@ -1,123 +1,236 @@
 # pyproject-init
 
-Create a Python project from the command line with a ready-to-use development setup.
+Create a ready-to-develop Python project from the command line.
 
-`pyproject-init` uses Click and Cookiecutter to generate projects with a `src/` package layout, Hatch/Hatchling configuration, Ruff, MyPy, pytest, pytest-randomly, and GitHub Actions configuration. The bundled default template includes starter code and a basic test so you can run the project's checks immediately.
+`pyproject-init` uses Click and Cookiecutter to generate a modern `src/`-layout Python project with:
 
-## Installation
+- [uv](https://docs.astral.sh/uv/) for Python, environments, dependencies, and commands
+- `uv_build` for packaging
+- pytest and pytest-cov
+- Ruff
+- MyPy
+- a `.python-version`
+- a practical `.gitignore`
+- an MIT `LICENSE`
+- a starter CLI application and test
 
-Requires Python 3.10 or newer. The project's CI covers Python 3.10, 3.11, and 3.12.
+## Requirements
 
-Once the package is published on PyPI:
+`pyproject-init` supports CPython 3.12, 3.13, and 3.14.
+
+The repository normally develops on Python 3.14.
+
+Install uv using the official standalone installer before working from a source checkout.
+
+## Development checkout
+
+Clone the repository and synchronize its environment:
 
 ```console
-python -m pip install pyproject-init
+git clone https://github.com/alexcwarren/pyproject-init.git
+cd pyproject-init
+uv sync
 ```
 
-For a source checkout, install from the repository root:
+Verify the CLI:
 
 ```console
-python -m pip install .
+uv run pyproject-init --help
 ```
 
-Install Hatch to run the generated project's development commands:
-
-```console
-python -m pip install hatch
-```
+Manual virtual-environment activation is not required.
 
 ## Quick start
 
-Create a project interactively in the current directory:
+Create a project interactively:
 
 ```console
-pyproject-init new
+uv run pyproject-init new
 ```
 
-Or supply a project name:
+Or provide a project name:
 
 ```console
-pyproject-init new my-cool-app
+uv run pyproject-init new my-cool-app
 ```
 
-Follow the prompts for project metadata and the Python version. After generation, enter the directory reported by the command:
+Choose an output directory:
 
 ```console
-cd my-cool-app
-hatch run all
+uv run pyproject-init new my-cool-app --output-dir /absolute/path/to/projects
 ```
 
-This runs the generated project's linting, type checking, and tests. Read its generated README for the application command and next steps.
-
-## Usage
-
-```text
-pyproject-init new [OPTIONS] [PROJECT_NAME]
-```
-
-| Option | Purpose |
-| --- | --- |
-| `-o, --output-dir DIRECTORY` | Parent directory in which to create the project. Use an absolute path when supplying this option. |
-| `-t, --template TEXT` | Select a bundled template; `default` is the supported starting point. |
-| `--no-input` | Skip prompts and use template defaults, together with the supplied project name. |
-| `--help` | Display command help. |
-
-### Choose an output directory
-
-Windows:
+PowerShell example:
 
 ```powershell
-pyproject-init new my-cool-app --output-dir "C:\Users\YourUser\Documents\NewProjects"
+uv run pyproject-init new my-cool-app `
+    --output-dir "C:\Users\YourUser\Documents\Projects"
 ```
 
-macOS/Linux:
+Use the default template without prompts:
 
 ```console
-pyproject-init new my-cool-app --output-dir /absolute/path/to/projects
+uv run pyproject-init new my-cool-app --template default --no-input
 ```
 
-The project is created beneath the output directory, for example `NewProjects/my-cool-app`.
+Review generated metadata before publishing a project created with `--no-input`.
 
-### Use defaults without prompts
+## Generated projects
 
-```console
-pyproject-init new my-cool-app --template default --no-input
-```
-
-Review the generated author information, description, and other metadata before publishing your project.
-
-### Get help
-
-```console
-pyproject-init --help
-pyproject-init new --help
-```
-
-## Project names
-
-The project folder and distribution name can contain hyphens, while Python package names must be valid identifiers. For example:
+A default generated project looks roughly like this:
 
 ```text
 my-cool-app/
+├── .gitignore
+├── .python-version
+├── LICENSE
 ├── README.md
 ├── pyproject.toml
 ├── src/
 │   └── my_cool_app/
-│       ├── __about__.py
 │       ├── __init__.py
 │       └── main.py
 └── tests/
     └── test_main.py
 ```
 
-The template calls these values `project_name` (`my-cool-app`) and `project_slug` (`my_cool_app`). Keep the package name importable if you change it during the prompts.
+The template distinguishes between:
+
+```text
+project_name: my-cool-app
+project_slug: my_cool_app
+```
+
+`project_name` is used for the distribution, repository, directory, and console command.
+
+`project_slug` is used for the importable Python package.
+
+The default template currently lets you choose Python 3.12, 3.13, or 3.14. The selected version is written to `.python-version` and becomes the project's minimum Python version.
+
+## Working in a generated project
+
+Enter the generated project and synchronize it:
+
+```console
+cd my-cool-app
+uv sync
+```
+
+Run its starter command:
+
+```console
+uv run my-cool-app
+```
+
+Expected output:
+
+```text
+Hello, World!
+```
+
+Run tests:
+
+```console
+uv run pytest
+```
+
+Run linting:
+
+```console
+uv run ruff check src tests
+```
+
+Check formatting:
+
+```console
+uv run ruff format src tests --check
+```
+
+Format the code:
+
+```console
+uv run ruff format src tests
+```
+
+Run type checking:
+
+```console
+uv run mypy src tests
+```
+
+Build the package:
+
+```console
+uv build
+```
+
+The generated project's own README contains its working commands and dependency-management instructions.
+
+## CLI usage
+
+```text
+pyproject-init new [OPTIONS] [PROJECT_NAME]
+```
+
+When running from this repository's development checkout, prefix the command with `uv run`.
+
+| Option | Purpose |
+| --- | --- |
+| `-o, --output-dir DIRECTORY` | Parent directory in which to create the project |
+| `-t, --template TEXT` | Bundled template to use; `default` is the established template |
+| `--no-input` | Skip prompts and use defaults plus any supplied project name |
+| `--help` | Display command help |
+
+Get detailed help with:
+
+```console
+uv run pyproject-init --help
+uv run pyproject-init new --help
+```
+
+## Development
+
+Routine repository verification is automated:
+
+```console
+uv run python scripts/verify.py
+```
+
+Additional smoke tests validate generated projects and built release artifacts:
+
+```console
+uv run python scripts/smoke_generated_project.py
+uv run python scripts/smoke_package.py
+```
+
+See [README_DEV.md](README_DEV.md) for the developer quick-reference.
+
+Detailed documentation:
+
+- [Development guide](docs/development.md)
+- [Testing guide](docs/testing.md)
+- [Release guide](docs/releasing.md)
+
+## Continuous integration
+
+GitHub Actions validates:
+
+- routine quality checks
+- Python 3.12 compatibility
+- Python 3.13 compatibility
+- Python 3.14 compatibility
+- a freshly generated project
+- the built `pyproject-init` wheel and bundled template
+
+The workflow exposes a final aggregate `CI` status check for branch protection.
 
 ## Current limitations
 
-- Explicit `--output-dir` values currently need to be absolute paths; relative-path support is planned.
-- Use a new destination. The CLI includes protection against creating a project at an existing destination.
-- The bundled `default` template is the established workflow. Broader custom-template support and additional template validation remain follow-up work.
+- The bundled `default` template is the primary supported generation path.
+- Custom-template support is not yet a fully established workflow.
+- Existing destination directories are rejected rather than overwritten.
+- Generated projects intentionally provide a small, conventional starting point rather than a complete open-source governance setup.
 
-## Contributing
+## License
 
-For setup, architecture, template maintenance, checks, troubleshooting, and release preparation, see [README_DEV.md](README_DEV.md).
+`pyproject-init` is licensed under the MIT License.

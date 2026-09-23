@@ -1,15 +1,15 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.12.17,<0.13"]
+build-backend = "uv_build"
 
 [project]
-name = "{{ cookiecutter.project_slug }}"
-dynamic = ["version"]
+name = "{{ cookiecutter.project_name }}"
+version = "0.1.0"
 description = "{{ cookiecutter.project_short_description }}"
 readme = "README.md"
 requires-python = ">={{ cookiecutter.python_version }}"
 license = "MIT"
-keywords = []
+license-files = ["LICENSE"]
 authors = [
   { name = "{{ cookiecutter.author_name }}", email = "{{ cookiecutter.author_email }}" },
 ]
@@ -19,7 +19,6 @@ classifiers = [
   "Programming Language :: Python :: {{ cookiecutter.python_version.split('.')[0] }}",
   "Programming Language :: Python :: {{ cookiecutter.python_version }}",
   "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
   # Add your project-specific runtime dependencies here
@@ -29,76 +28,23 @@ dependencies = [
 {{ cookiecutter.project_name }} = "{{ cookiecutter.project_slug }}.main:main"
 
 [project.urls]
-Documentation = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_slug }}#readme"
-Issues = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_slug }}/issues"
-Source = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_slug }}"
+Documentation = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_name }}#readme"
+Issues = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_name }}/issues"
+Source = "https://github.com/{{ cookiecutter.user_name }}/{{ cookiecutter.project_name }}"
 
-[tool.hatch.version]
-path = "src/{{ cookiecutter.project_slug }}/__about__.py"
-
-[tool.hatch.envs.default]
-dependencies = [
+[dependency-groups]
+dev = [
+  "mypy",
   "pytest",
   "pytest-cov",
   "pytest-randomly",
   "ruff",
-  "mypy",
-  "pyclean"
 ]
-
-[tool.hatch.envs.default.scripts]
-test = "pytest {args:tests}"
-cov = "pytest --cov={{ cookiecutter.project_slug }} --cov-report=term-missing --cov-report=html {args:tests}"
-lint = "ruff check src tests"
-format = "ruff format src tests"
-typecheck = "mypy src"
-clean = "pyclean ."
-all = [
-  "lint",
-  "typecheck",
-  "test"
-]
-
-[tool.hatch.envs.lint]
-dependencies = [
-  "ruff"
-]
-
-[tool.hatch.envs.lint.scripts]
-lint = "ruff check src tests"
-format = "ruff format src tests"
-format-check = "ruff format src tests --check"
-fix = "ruff check src tests --fix"
-
-[tool.hatch.envs.type]
-dependencies = [
-  "mypy"
-]
-
-[tool.hatch.envs.type.scripts]
-typecheck = "mypy src"
-
-
-[tool.hatch.envs.test] # Dedicated test environment for the generated project
-dependencies = [
-  "pytest",
-  "pytest-cov",
-  "pytest-randomly"
-]
-[tool.hatch.envs.test.scripts]
-test = "pytest {args:tests}"
-cov = "pytest --cov={{ cookiecutter.project_slug }} --cov-report=term-missing --cov-report=html {args:tests}"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/{{ cookiecutter.project_slug }}"]
 
 [tool.coverage.run]
 source_pkgs = ["{{ cookiecutter.project_slug }}", "tests"]
 branch = true
 parallel = true
-omit = [
-  "src/{{ cookiecutter.project_slug }}/__about__.py",
-]
 
 [tool.coverage.paths]
 "{{ cookiecutter.project_slug }}" = [
