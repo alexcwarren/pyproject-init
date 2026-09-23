@@ -56,6 +56,28 @@ def run(
     )
 
 
+def run_expect_failure(
+    command: tuple[str, ...],
+    *,
+    cwd: Path,
+) -> subprocess.CompletedProcess[str]:
+    """Run a trusted command and require it to fail."""
+    write("$ " + " ".join(command))
+
+    result = subprocess.run(  # noqa: S603
+        command,
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    if result.returncode == 0:
+        raise RuntimeError("Command succeeded unexpectedly: " + " ".join(command))
+
+    return result
+
+
 def verify_expected_files(project_dir: Path) -> None:
     """Confirm the generated project contains expected top-level files."""
     missing = [name for name in EXPECTED_FILES if not (project_dir / name).exists()]
@@ -106,6 +128,34 @@ def main() -> int:
                 ),
                 cwd=repo_root,
             )
+
+            write()
+            write("==> Verify duplicate destination protection")
+
+            duplicate_result = run_expect_failure(
+                (
+                    "uv",
+                    "run",
+                    "pyproject-init",
+                    "new",
+                    PROJECT_NAME,
+                    "--output-dir",
+                    str(output_dir),
+                    "--template",
+                    "default",
+                    "--no-input",
+                ),
+                cwd=repo_root,
+            )
+
+            expected_message = "Project directory already exists"
+
+            if expected_message not in duplicate_result.stderr:
+                raise RuntimeError(
+                    "Duplicate destination failed for an unexpected reason."
+                )
+
+            write("Duplicate destination was rejected as expected.")
 
             project_dir = output_dir / PROJECT_NAME
 
