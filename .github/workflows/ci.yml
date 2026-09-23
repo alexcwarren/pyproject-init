@@ -4,149 +4,125 @@ on:
   push:
     branches:
       - main
-      - 'feature/*'
-      - 'fix/*'
-      - 'chore/*'
+      - "release/**"
+
   pull_request:
     branches:
       - main
+      - "release/**"
 
 jobs:
-  precheck:
+  quality:
+    name: Quality
     runs-on: ubuntu-latest
 
-    if: github.event_name == 'pull_request' || (github.event_name != 'pull_request' && !contains(github.event.head_commit.message, '[skip-ci]'))
-
     steps:
-      - uses: actions/checkout@v4
-      - run: echo "${{ github.event_name }}"
+      - name: Check out repository
+        uses: actions/checkout@v7
 
-  lint:
-    needs: precheck
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
 
+      - name: Install Python
+        run: uv python install 3.14
+
+      - name: Synchronize environment
+        run: uv sync --locked
+
+      - name: Run routine verification
+        run: uv run python scripts/verify.py
+
+  compatibility:
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version:
+          - "3.12"
+          - "3.13"
+          - "3.14"
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out repository
+        uses: actions/checkout@v7
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10
         with:
-          python-version: ${{ matrix.python-version }}
+          enable-cache: true
 
-      - name: Install Hatch
-        run: pip install hatch
+      - name: Install Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: hatch env create lint && hatch run pip install -e .
+      - name: Run tests on Python ${{ matrix.python-version }}
+        run: uv run --locked --python ${{ matrix.python-version }} pytest
 
-      - name: Run lint
-        run: hatch run lint:all
-
-  typecheck:
-    needs: precheck
-
+  generated-project:
+    name: Generated project
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out repository
+        uses: actions/checkout@v7
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10
         with:
-          python-version: ${{ matrix.python-version }}
+          enable-cache: true
 
-      - name: Install Hatch
-        run: pip install hatch
+      - name: Install Python
+        run: uv python install 3.14
 
-      - name: Install dependencies
-        run: hatch env create type && hatch run pip install -e .
+      - name: Synchronize environment
+        run: uv sync --locked
 
-      - name: Run typecheck
-        run: hatch run type:typecheck
+      - name: Smoke-test generated project
+        run: uv run python scripts/smoke_generated_project.py
 
-  test-pyproject-init:
-    needs: precheck
-
+  package:
+    name: Package
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out repository
+        uses: actions/checkout@v7
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10
         with:
-          python-version: ${{ matrix.python-version }}
+          enable-cache: true
 
-      - name: Install Hatch
-        run: pip install hatch
+      - name: Install Python
+        run: uv python install 3.14
 
-      - name: Install dependencies
-        run: hatch env create test && hatch run pip install -e .
+      - name: Synchronize environment
+        run: uv sync --locked
 
-      - name: Run tests
-        run: hatch run test:pyproject-init
+      - name: Smoke-test built package
+        run: uv run python scripts/smoke_package.py
 
-  test-clean:
-    needs: precheck
-
+  ci-success:
+    name: CI
+    if: always()
+    needs:
+      - quality
+      - compatibility
+      - generated-project
+      - package
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-
     steps:
-      - uses: actions/checkout@v3
+      - name: Confirm all CI jobs passed
+        if: >-
+          needs.quality.result != 'success' ||
+          needs.compatibility.result != 'success' ||
+          needs.generated-project.result != 'success' ||
+          needs.package.result != 'success'
+        run: exit 1
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install Hatch
-        run: pip install hatch
-
-      - name: Install dependencies
-        run: hatch env create test && hatch run pip install -e .
-
-      - name: Run tests
-        run: hatch run test:clean
-
-  coverage:
-    needs: precheck
-
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install Hatch
-        run: pip install hatch
-
-      - name: Install dependencies
-        run: hatch env create coverage && hatch run pip install -e .
-
-      - name: Run coverage
-        run: hatch run coverage:cov
+      - name: CI passed
+        run: echo "All CI jobs passed."
